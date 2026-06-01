@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "482809286288",
+    "project_id": "cryptaf-36296",
+    "storage_bucket": "cryptaf-36296.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482809286288:android:86e3906f841f9e90a3d215",
+        "android_client_info": {
+          "package_name": "com.cryptaf.vault"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmY13cGGOTJf-20YOGgB8SMONnscYzWDQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
