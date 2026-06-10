@@ -15,6 +15,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui';
 import 'package:cryptaf/services/firestore_service.dart';
+import 'dart:async';
 import 'package:cryptaf/web_url_stub.dart' if (dart.library.html) 'dart:html' as html;
 
 void main() async {
@@ -80,12 +81,16 @@ class CryptafApp extends StatefulWidget {
 class _CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
   ThemeMode _themeMode = ThemeMode.dark;
   String _initialRoute = '/';
+  Timer? _activityTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     FirestoreService().updateLastActive();
+    _activityTimer = Timer.periodic(const Duration(minutes: 30), (_) {
+      FirestoreService().updateLastActive();
+    });
     _loadTheme();
     if (kIsWeb) {
       final url = html.window.location.href;
@@ -116,14 +121,15 @@ class _CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _activityTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      FirestoreService().updateLastActive();
+      await FirestoreService().updateLastActive();
     }
   }
 

@@ -22,12 +22,19 @@ class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
   final CryptoService _crypto = CryptoService();
 
   final Set<String> _revealedPasswords = {};
+  final Map<String, String> _decryptedPasswordsCache = {};
   int _clipboardCountdown = 0;
   Timer? _clipboardTimer;
+
+  bool _isVaultUnlocked = false;
+  bool _isUnlocking = false;
+  String _unlockError = '';
+  final _vaultPassCtrl = TextEditingController();
 
   @override
   void dispose() {
     _clipboardTimer?.cancel();
+    _vaultPassCtrl.dispose();
     super.dispose();
   }
 
@@ -190,6 +197,89 @@ class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isVaultUnlocked) {
+      final Widget unlockBody = Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: GlassContainer(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.lock_outline, size: 64, color: Color(0xFFC9A84C)),
+                  const SizedBox(height: 16),
+                  const Text('Unlock Password Manager', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('Enter your vault password to access your passwords.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 14)),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _vaultPassCtrl,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Vault Password',
+                      hintStyle: const TextStyle(color: Colors.white24),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.05),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    ),
+                  ),
+                  if (_unlockError.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(_unlockError, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+                  ],
+                  const SizedBox(height: 24),
+                  GradientButton(
+                    text: 'Unlock',
+                    isLoading: _isUnlocking,
+                    onPressed: () async {
+                      setState(() {
+                        _isUnlocking = true;
+                        _unlockError = '';
+                      });
+                      final isValid = await _crypto.verifyVaultPassword(_vaultPassCtrl.text);
+                      if (!mounted) return;
+                      if (isValid) {
+                        setState(() {
+                          _isVaultUnlocked = true;
+                        });
+                      } else {
+                        setState(() {
+                          _unlockError = 'Incorrect vault password';
+                          _isUnlocking = false;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      if (widget.isTab) {
+        return Scaffold(
+          backgroundColor: const Color(0xFF0A0A0A),
+          body: AnimatedBackground(child: unlockBody),
+        );
+      }
+      return Scaffold(
+        backgroundColor: const Color(0xFF0A0A0A),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('Password Manager', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: AnimatedBackground(child: unlockBody),
+      );
+    }
+
     final Widget content = StreamBuilder<QuerySnapshot>(
       stream: _firestore.getPasswordEntries(),
       builder: (context, snapshot) {
@@ -270,7 +360,10 @@ class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
 
                   String displayPass = '••••••••••••';
                   if (isRevealed) {
-                    displayPass = _crypto.decryptString(encryptedPass, _crypto.masterAppKey);
+                    if (!_decryptedPasswordsCache.containsKey(docId)) {
+                      _decryptedPasswordsCache[docId] = _crypto.decryptString(encryptedPass, _crypto.masterAppKey);
+                    }
+                    displayPass = _decryptedPasswordsCache[docId]!;
                   }
 
                   return GlassContainer(
@@ -341,7 +434,10 @@ class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
                         IconButton(
                           icon: const Icon(Icons.copy_outlined, color: Color(0xFFC9A84C)),
                           onPressed: () {
-                            final decrypted = _crypto.decryptString(encryptedPass, _crypto.masterAppKey);
+                            if (!_decryptedPasswordsCache.containsKey(docId)) {
+                              _decryptedPasswordsCache[docId] = _crypto.decryptString(encryptedPass, _crypto.masterAppKey);
+                            }
+                            final decrypted = _decryptedPasswordsCache[docId]!;
                             Clipboard.setData(ClipboardData(text: decrypted));
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Password copied to clipboard'), duration: Duration(seconds: 2)),

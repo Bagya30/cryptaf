@@ -159,6 +159,18 @@ class _ScanScreenState extends State<ScanScreen> {
 
                       try {
                         final CryptoService _crypto = CryptoService();
+                        final isValid = await _crypto.verifyVaultPassword(_passwordController.text);
+                        if (!isValid) {
+                          if (mounted) {
+                            setModalState(() => _isProcessing = false);
+                            setState(() => _isProcessing = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Incorrect vault password'), backgroundColor: Colors.redAccent),
+                            );
+                          }
+                          return;
+                        }
+
                         final salt = _crypto.generateSalt();
                         final key = _crypto.deriveKey(_passwordController.text, salt);
                         final encResult = _crypto.encryptFile(_capturedBytes!, key, ivBase64: null);

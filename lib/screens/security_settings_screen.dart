@@ -9,7 +9,6 @@ import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:cryptaf/widgets/gradient_button.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
@@ -1107,76 +1106,11 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                           padding: EdgeInsets.symmetric(vertical: 8.0),
                           child: Divider(color: Colors.white12),
                         ),
-                        SwitchListTile(
-                          activeColor: teal,
+                        ListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text('Biometric Login', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
-                          subtitle: const Text('Use Face ID or Fingerprint to unlock app', style: TextStyle(color: Colors.white54, fontSize: 13)),
-                          value: biometricsEnabled,
-                          onChanged: (bool value) async {
-                            if (kIsWeb) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Biometric login is available on Android app only'), backgroundColor: Color(0xFFC9A84C)),
-                              );
-                              return;
-                            }
-
-                            if (value) {
-                              final LocalAuthentication auth = LocalAuthentication();
-                              try {
-                                final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
-                                final bool canAuthenticate = canAuthenticateWithBiometrics || await auth.isDeviceSupported();
-
-                                if (!canAuthenticate) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Biometrics not supported on this device'), backgroundColor: Colors.redAccent),
-                                    );
-                                  }
-                                  return;
-                                }
-
-                                final bool didAuthenticate = await auth.authenticate(
-                                  localizedReason: 'Authenticate to enable biometric login for Cryptaf',
-                                  options: const AuthenticationOptions(biometricOnly: true),
-                                );
-
-                                if (didAuthenticate) {
-                                  final prefs = await SharedPreferences.getInstance();
-                                  await prefs.setBool('biometricsEnabled', true);
-                                  await _firestore.updateSecuritySettings(twoFactorEnabled, true);
-                                  if (mounted) {
-                                    setState(() { biometricsEnabled = true; });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Biometric login enabled successfully'), backgroundColor: Colors.greenAccent),
-                                    );
-                                  }
-                                }
-                              } on PlatformException catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Biometric not available on this device'), backgroundColor: Colors.redAccent),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Biometric error: $e'), backgroundColor: Colors.redAccent),
-                                  );
-                                }
-                              }
-                            } else {
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setBool('biometricsEnabled', false);
-                              await _firestore.updateSecuritySettings(twoFactorEnabled, false);
-                              if (mounted) {
-                                setState(() { biometricsEnabled = false; });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Biometric login disabled'), backgroundColor: Colors.orangeAccent),
-                                );
-                              }
-                            }
-                          },
+                          title: const Text('Biometric Login', style: TextStyle(color: Colors.white38, fontWeight: FontWeight.w600, fontSize: 16)),
+                          subtitle: const Text('Coming Soon', style: TextStyle(color: Colors.white24, fontSize: 13)),
+                          trailing: const Icon(Icons.fingerprint, color: Colors.white24),
                         ),
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.0),

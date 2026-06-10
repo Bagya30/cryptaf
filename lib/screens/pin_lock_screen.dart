@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:local_auth/local_auth.dart';
 import '../services/crypto_service.dart';
 import '../widgets/animated_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -184,44 +183,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
   }
 
   Future<void> _useBiometric() async {
-    if (lockoutEndTime != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(lockoutTimerText), backgroundColor: Colors.redAccent),
-      );
-      return;
-    }
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Biometric login is only available on mobile app'), backgroundColor: Colors.orangeAccent),
-      );
-      return;
-    }
-
-    try {
-      final LocalAuthentication auth = LocalAuthentication();
-      final bool canAuthenticate = await auth.canCheckBiometrics || await auth.isDeviceSupported();
-
-      if (!canAuthenticate) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Biometrics not supported on this device'), backgroundColor: Colors.redAccent),
-        );
-        return;
-      }
-
-      final bool didAuthenticate = await auth.authenticate(
-        localizedReason: 'Unlock Cryptaf Vault',
-        options: const AuthenticationOptions(biometricOnly: false),
-      );
-
-      if (didAuthenticate && mounted) {
-        widget.onUnlocked?.call();
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Biometric error: $e'), backgroundColor: Colors.redAccent),
-      );
-    }
+    // Biometric removed
   }
 
   @override
@@ -294,10 +256,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildPadButton(
-                            child: const Icon(Icons.fingerprint, color: Color(0xFFC9A84C), size: 28),
-                            onTap: _useBiometric,
-                          ),
+                          const SizedBox(width: 75),
                           _buildNumberButton('0'),
                           _buildPadButton(
                             child: const Icon(Icons.backspace_outlined, color: Colors.white54, size: 24),
@@ -310,10 +269,6 @@ class _PinLockScreenState extends State<PinLockScreen> {
                 ),
 
                 const SizedBox(height: 40),
-                TextButton(
-                  onPressed: _useBiometric,
-                  child: const Text('Forgot PIN? Use biometric', style: TextStyle(color: Color(0xFFC9A84C), fontSize: 14)),
-                ),
                 const SizedBox(height: 24),
               ],
             ),

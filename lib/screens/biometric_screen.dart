@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cryptaf/main.dart'; // For AuthenticationWrapper
 import 'package:cryptaf/widgets/animated_background.dart';
@@ -16,55 +15,13 @@ class BiometricScreen extends StatefulWidget {
 }
 
 class _BiometricScreenState extends State<BiometricScreen> {
-  final LocalAuthentication _auth = LocalAuthentication();
   bool _isAuthenticating = false;
 
   static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0A0A0A);
 
   Future<void> _enableBiometric() async {
-    setState(() => _isAuthenticating = true);
-    try {
-      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final bool canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
-
-      if (!canAuthenticate) {
-        setState(() => _isAuthenticating = false);
-        _showError('Biometric login is available on Android app only');
-        return;
-      }
-
-      final bool didAuthenticate = await _auth.authenticate(
-        localizedReason: 'Scan your fingerprint or face to enable biometric security',
-        options: const AuthenticationOptions(
-          biometricOnly: false,
-          stickyAuth: true,
-        ),
-      );
-
-      if (!mounted) return;
-
-      if (didAuthenticate) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('biometric_setup_done', true);
-        await prefs.setBool('biometric_enabled', true);
-
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AuthenticationWrapper()),
-          );
-        }
-      } else {
-        setState(() => _isAuthenticating = false);
-        _showError('Biometric authentication failed or was canceled.');
-      }
-    } on PlatformException catch (e) {
-      setState(() => _isAuthenticating = false);
-      _showError('Biometric not available on this device');
-    } catch (e) {
-      setState(() => _isAuthenticating = false);
-      _showError('An unexpected error occurred: $e');
-    }
+    _showError('Biometric Login is coming soon!');
   }
 
   Future<void> _skipBiometric() async {

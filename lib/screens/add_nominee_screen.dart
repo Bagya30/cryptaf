@@ -11,6 +11,7 @@ import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:cryptaf/widgets/gradient_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 
 class AddNomineeScreen extends StatefulWidget {
@@ -23,7 +24,7 @@ class AddNomineeScreen extends StatefulWidget {
   State<AddNomineeScreen> createState() => _AddNomineeScreenState();
 }
 
-enum NomineeStep { details, emailOtp, mobileOtp }
+enum NomineeStep { details, emailOtp }
 
 class _AddNomineeScreenState extends State<AddNomineeScreen> {
   static const _gold = Color(0xFFC9A84C);
@@ -40,7 +41,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
   final _phoneCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _otpCtrl = TextEditingController();
-  final _mobileOtpCtrl = TextEditingController();
 
   NomineeStep _currentStep = NomineeStep.details;
   String _relationship = 'Spouse';
@@ -50,12 +50,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
   String? _sentEmailOtp;
   bool _isSendingEmailOtp = false;
   bool _emailVerified = false;
-
-  // Mobile OTP
-  String? _verificationId; // For Mobile
-  ConfirmationResult? _confirmationResult; // For Web
-  bool _isSendingMobileOtp = false;
-  bool _mobileVerified = false;
 
 
   bool _isSaving = false;
@@ -85,7 +79,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
       _relationship = d['relationship'] ?? 'Spouse';
       _trustLevel = d['trustLevel'] ?? 'Primary Nominee';
       _emailVerified = d['emailVerified'] ?? false;
-      _mobileVerified = d['mobileVerified'] ?? false;
     }
   }
 
@@ -96,7 +89,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
     _otpCtrl.dispose();
-    _mobileOtpCtrl.dispose();
     _timer?.cancel();
     super.dispose();
   }
@@ -130,6 +122,19 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
     setState(() => _isSendingEmailOtp = true);
 
     try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('pendingOTPs')
+            .doc(email)
+            .set({
+          'otp': otp,
+          'expiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(minutes: 10))),
+        });
+      }
+
       final response = await http.post(
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
@@ -140,7 +145,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
           'template_params': {
             'email': email,
             'passcode': otp,
-            'time': '15 minutes',
+            'time': '10 minutes',
           },
         }),
       ).timeout(const Duration(seconds: 15));
@@ -167,120 +172,50 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
 
   // ── Step 2: Verify Email OTP ──────────────────────────────────────────────
 
-  void _verifyEmailOtp() {
-    if (_otpCtrl.text.trim() == _sentEmailOtp) {
-      setState(() {
-        _emailVerified = true;
-        _currentStep = NomineeStep.mobileOtp;
-      });
-      _sendMobileOtp();
-    } else {
-      _showError('Incorrect Email OTP');
-    }
-  }
-
-  // ── Step 3: Send Mobile OTP ───────────────────────────────────────────────
-
-  Future<void> _sendMobileOtp() async {
-    final phone = _phoneCtrl.text.trim();
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 10) {
-      _showError('Enter a valid 10-digit mobile number');
-      return;
-    }
-    final tenDigits = digits.substring(digits.length - 10);
-    final formattedPhone = '+91$tenDigits';
-
-    setState(() => _isSendingMobileOtp = true);
-
-    try {
-      final String accountSid = 'AC73850f840509fcbb6936e196308e34da';
-      final String authToken = '4aca988f67128bfc261859d718239bdd';
-      final String basicAuth = 'Basic ' + base64Encode(utf8.encode('$accountSid:$authToken'));
-
-      final response = await http.post(
-        Uri.parse('https://verify.twilio.com/v2/Services/VA701db52176290489d6104c4acaf8faf2/Verifications'),
-        headers: {
-          'Authorization': basicAuth,
-        },
-        body: {
-          'To': formattedPhone,
-          'Channel': 'sms',
-        },
-      );
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        setState(() {
-          _isSendingMobileOtp = false;
-        });
-        _startTimer();
-        _showSnackbar('OTP sent to $formattedPhone', Icons.phone_android_outlined);
-      } else {
-        setState(() => _isSendingMobileOtp = false);
-        _showError('Failed to send OTP (${response.statusCode})');
-      }
-    } catch (e) {
-      setState(() => _isSendingMobileOtp = false);
-      _showError('Network error: $e');
-    }
-  }
-
-  // ── Step 4: Verify Mobile OTP ─────────────────────────────────────────────
-
-  Future<void> _verifyMobileOtp() async {
-    final code = _mobileOtpCtrl.text.trim();
-    if (code.length != 6) {
-      _showError('Enter 6-digit code');
-      return;
-    }
-
-    final phone = _phoneCtrl.text.trim();
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 10) {
-      _showError('Enter a valid 10-digit mobile number');
-      return;
-    }
-    final tenDigits = digits.substring(digits.length - 10);
-    final formattedPhone = '+91$tenDigits';
-
+  Future<void> _verifyEmailOtp() async {
+    final email = _emailCtrl.text.trim();
+    final enteredOtp = _otpCtrl.text.trim();
+    final user = _auth.currentUser;
+    
+    if (user == null) return;
+    
     setState(() => _isSaving = true);
 
     try {
-      final String accountSid = 'AC73850f840509fcbb6936e196308e34da';
-      final String authToken = '4aca988f67128bfc261859d718239bdd';
-      final String basicAuth = 'Basic ' + base64Encode(utf8.encode('$accountSid:$authToken'));
-
-      final response = await http.post(
-        Uri.parse('https://verify.twilio.com/v2/Services/VA701db52176290489d6104c4acaf8faf2/VerificationCheck'),
-        headers: {
-          'Authorization': basicAuth,
-        },
-        body: {
-          'To': formattedPhone,
-          'Code': code,
-        },
-      );
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        if (data['status'] == 'approved') {
-          setState(() {
-            _mobileVerified = true;
-            _isSaving = false;
-          });
-          _showSnackbar('Mobile Verified!', Icons.check_circle_outline);
-          _saveNominee();
-        } else {
-          setState(() => _isSaving = false);
-          _showError('Invalid OTP. Please try again.');
-        }
+      final docRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('pendingOTPs')
+          .doc(email);
+          
+      final doc = await docRef.get();
+      
+      if (!doc.exists) {
+        setState(() => _isSaving = false);
+        _showError('No pending OTP found. Please resend.');
+        return;
+      }
+      
+      final data = doc.data()!;
+      final storedOtp = data['otp'];
+      final Timestamp expiresAt = data['expiresAt'];
+      
+      if (expiresAt.toDate().isBefore(DateTime.now())) {
+        setState(() => _isSaving = false);
+        _showError('OTP expired, please resend');
+        return;
+      }
+      
+      if (storedOtp == enteredOtp) {
+        await docRef.delete();
+        setState(() {
+          _emailVerified = true;
+          _isSaving = false;
+        });
+        _saveNominee();
       } else {
         setState(() => _isSaving = false);
-        _showError('Verification failed (${response.statusCode})');
+        _showError('Invalid OTP');
       }
     } catch (e) {
       setState(() => _isSaving = false);
@@ -301,8 +236,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
       'trustLevel': _trustLevel,
       'address': _addressCtrl.text.trim(),
       'emailVerified': _emailVerified,
-      'mobileVerified': _mobileVerified,
-      'verified': _emailVerified && _mobileVerified,
+      'verified': _emailVerified,
     };
 
     try {
@@ -369,14 +303,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
           icon: Icons.mark_email_read_outlined,
           onResend: _sendEmailOtp,
         );
-      case NomineeStep.mobileOtp:
-        return _buildOtpView(
-          title: 'Mobile Verification',
-          subtitle: 'Enter the code sent to ${_phoneCtrl.text}',
-          controller: _mobileOtpCtrl,
-          icon: Icons.phone_android_outlined,
-          onResend: _sendMobileOtp,
-        );
     }
   }
 
@@ -403,7 +329,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
                   if (digits.length < 10) return 'Enter a valid 10-digit mobile number';
                   return null;
                 },
-                suffix: _mobileVerified ? const Icon(Icons.check_circle, color: _gold, size: 20) : null),
+            ),
             const SizedBox(height: 24),
             _sectionHeader('ROLE & RELATIONSHIP'),
             const SizedBox(height: 16),
@@ -455,7 +381,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
   Widget _buildBottomAction() {
     String label = '';
     VoidCallback? action;
-    bool isLoading = _isSaving || _isSendingEmailOtp || _isSendingMobileOtp;
+    bool isLoading = _isSaving || _isSendingEmailOtp;
 
     switch (_currentStep) {
       case NomineeStep.details:
@@ -465,10 +391,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
       case NomineeStep.emailOtp:
         label = 'Verify Email';
         action = _verifyEmailOtp;
-        break;
-      case NomineeStep.mobileOtp:
-        label = 'Verify Mobile';
-        action = _verifyMobileOtp;
         break;
     }
 

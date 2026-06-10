@@ -14,6 +14,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
 
 class VoiceNotesScreen extends StatefulWidget {
   const VoiceNotesScreen({super.key});
@@ -43,15 +44,29 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
     _initAudio();
   }
 
+  Future<bool> _requestMicPermission() async {
+    try {
+      final status = await Permission.microphone.request();
+      return status.isGranted;
+    } catch (e) {
+      // Fallback - try to initialize without permission check
+      return true;
+    }
+  }
+
   Future<void> _initAudio() async {
     try {
       if (!kIsWeb) {
-        var status = await Permission.microphone.request();
-        if (status != PermissionStatus.granted) {
-          throw RecordingPermissionException('Microphone permission not granted');
+        final granted = await _requestMicPermission();
+        if (!granted) {
+          throw Exception('Microphone permission not granted');
         }
       }
-      await _recorder.openRecorder();
+      try {
+        await _recorder.openRecorder();
+      } catch (e) {
+        print('Audio init error: $e');
+      }
       await _player.openPlayer();
       setState(() {
         _isRecorderInitialized = true;
@@ -96,9 +111,10 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
   Future<void> _startRecording() async {
     if (!_isRecorderInitialized) return;
     try {
+      final String filePath = 'voice_note_temp.m4a';
       await _recorder.startRecorder(
-        toFile: 'voice_note_temp',
-        codec: kIsWeb ? Codec.opusWebM : Codec.aacADTS,
+        toFile: filePath,
+        codec: Codec.aacMP4,
       );
       setState(() {
         _isRecording = true;
@@ -196,12 +212,12 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
 
       // On web, we can play from a data URI
       final base64Audio = base64Encode(decryptedBytes);
-      final mime = kIsWeb ? 'audio/webm' : 'audio/aac';
+      final mime = kIsWeb ? 'audio/webm' : 'audio/mp4';
       final dataUri = 'data:$mime;base64,$base64Audio';
 
       await _player.startPlayer(
         fromURI: dataUri,
-        codec: kIsWeb ? Codec.opusWebM : Codec.aacADTS,
+        codec: Codec.aacMP4,
         whenFinished: () {
           if (mounted) {
             setState(() {

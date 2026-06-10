@@ -32,6 +32,12 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   int _durationHours = 168;
 
   @override
+  void initState() {
+    super.initState();
+    _firestore.updateLastActive();
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     _emailController.dispose();
@@ -51,7 +57,12 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   void _calculateRemainingTime(DateTime lastActiveDate, int durationHours) {
     final expiryDate = lastActiveDate.add(Duration(hours: durationHours));
     final now = DateTime.now();
-    _remainingTime = expiryDate.difference(now);
+    
+    if (now.difference(lastActiveDate).inSeconds < 5) {
+      _remainingTime = Duration(hours: durationHours);
+    } else {
+      _remainingTime = expiryDate.difference(now);
+    }
 
     if (_remainingTime.isNegative) {
       _remainingTime = Duration.zero;
@@ -246,14 +257,24 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                               Text('Timer duration before release', style: TextStyle(color: Colors.white54, fontSize: 12)),
                             ],
                           ),
-                          DurationDropdown(
-                            initialValue: _durationHours,
-                            onChanged: (int newValue) async {
-                              setState(() {
-                                _durationHours = newValue;
-                              });
+                          DropdownButton<String>(
+                            value: _durationHours == 24 ? '24 Hours' : _durationHours == 48 ? '48 Hours' : _durationHours == 72 ? '72 Hours' : _durationHours == 720 ? '30 Days' : '7 Days',
+                            dropdownColor: const Color(0xFF0A0A0A),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            underline: const SizedBox(),
+                            icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFC9A84C)),
+                            items: ['24 Hours', '48 Hours', '72 Hours', '7 Days', '30 Days']
+                              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                              .toList(),
+                            onChanged: (val) async {
+                              int newHours = 168;
+                              if (val == '24 Hours') newHours = 24;
+                              if (val == '48 Hours') newHours = 48;
+                              if (val == '72 Hours') newHours = 72;
+                              if (val == '30 Days') newHours = 720;
+                              setState(() => _durationHours = newHours);
                               await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).set({
-                                'emergencyDurationHours': newValue,
+                                'emergencyDurationHours': newHours,
                               }, SetOptions(merge: true));
                             },
                           ),
@@ -469,54 +490,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
           Text(text, style: TextStyle(color: isDone ? Colors.white : Colors.white38, fontSize: 14)),
         ],
       ),
-    );
-  }
-}
-
-class DurationDropdown extends StatefulWidget {
-  final int initialValue;
-  final ValueChanged<int> onChanged;
-  const DurationDropdown({super.key, required this.initialValue, required this.onChanged});
-
-  @override
-  _DurationDropdownState createState() => _DurationDropdownState();
-}
-
-class _DurationDropdownState extends State<DurationDropdown> {
-  late int _value;
-
-  @override
-  void initState() {
-    super.initState();
-    _value = widget.initialValue;
-    if (![24, 48, 72, 168, 720].contains(_value)) {
-      _value = 168;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButton<int>(
-      value: _value,
-      dropdownColor: const Color(0xFF0A0A0A),
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      underline: const SizedBox(),
-      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFC9A84C)),
-      items: const [
-        DropdownMenuItem(value: 24, child: Text('24 Hours')),
-        DropdownMenuItem(value: 48, child: Text('48 Hours')),
-        DropdownMenuItem(value: 72, child: Text('72 Hours')),
-        DropdownMenuItem(value: 168, child: Text('7 Days')),
-        DropdownMenuItem(value: 720, child: Text('30 Days')),
-      ],
-      onChanged: (int? newValue) {
-        if (newValue != null) {
-          setState(() {
-            _value = newValue;
-          });
-          widget.onChanged(newValue);
-        }
-      },
     );
   }
 }

@@ -26,7 +26,6 @@ import 'package:cryptaf/screens/trash_screen.dart';
 import 'package:cryptaf/screens/document_expiry_screen.dart';
 import 'package:cryptaf/screens/vault_health_screen.dart';
 import 'package:cryptaf/screens/digital_will_screen.dart';
-import 'package:cryptaf/screens/voice_notes_screen.dart';
 import 'package:cryptaf/widgets/vault_search_delegate.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:cryptaf/widgets/glass_container.dart';
@@ -966,12 +965,6 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                       label: 'Will',
                                       icon: Icons.history_edu_outlined,
                                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DigitalWillScreen())),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Voice Notes',
-                                      icon: Icons.mic_none_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VoiceNotesScreen())),
                                     ),
                                     const SizedBox(width: 16),
                                     _QuickActionButton(

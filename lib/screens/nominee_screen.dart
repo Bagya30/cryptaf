@@ -244,21 +244,16 @@ class _NomineeScreenState extends State<NomineeScreen> {
     final trustLevel = data['trustLevel'] ?? 'Secondary';
     final updatedAt = (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
     final emailVerified = data['emailVerified'] ?? false;
-    final mobileVerified = data['mobileVerified'] ?? false;
-    final fullyVerified = emailVerified && mobileVerified;
+    final fullyVerified = emailVerified;
 
     int trustScore = 0;
-    if (emailVerified) trustScore += 50;
-    if (mobileVerified) trustScore += 50;
+    if (emailVerified) trustScore = 100;
 
     Color trustColor = Colors.greenAccent;
     String trustLabel = 'HIGH TRUST';
-    if (trustScore < 50) {
+    if (trustScore < 100) {
       trustColor = Colors.redAccent;
       trustLabel = 'LOW TRUST';
-    } else if (trustScore < 75) {
-      trustColor = Colors.orangeAccent;
-      trustLabel = 'MEDIUM TRUST';
     }
 
     return Container(
@@ -345,8 +340,6 @@ class _NomineeScreenState extends State<NomineeScreen> {
           Row(
             children: [
               _miniBadge(Icons.email, 'Email', emailVerified),
-              const SizedBox(width: 8),
-              _miniBadge(Icons.phone_android, 'Mobile', mobileVerified),
               const Spacer(),
               if (fullyVerified)
                 Container(
