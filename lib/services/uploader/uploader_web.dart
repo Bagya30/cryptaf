@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
@@ -34,13 +35,13 @@ class PlatformUploader extends BaseUploader {
         final jsonResponse = json.decode(xhr.responseText!);
         completer.complete(jsonResponse['secure_url']);
       } else {
-        print('Web Upload Failed: ${xhr.status} - ${xhr.responseText}');
+        debugPrint('Web Upload Failed: ${xhr.status} - ${xhr.responseText}');
         completer.complete(null);
       }
     });
 
     xhr.onError.listen((e) {
-      print('Web Upload Error: $e');
+      debugPrint('Web Upload Error: $e');
       completer.complete(null);
     });
 

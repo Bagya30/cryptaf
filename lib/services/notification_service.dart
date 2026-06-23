@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,7 +23,7 @@ class NotificationService {
         sound: true,
       );
 
-      print('Notification permission: ${settings.authorizationStatus}');
+      debugPrint('Notification permission: ${settings.authorizationStatus}');
 
       if (kIsWeb && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,7 +55,7 @@ class NotificationService {
           }
         }
       } catch (e) {
-        print('FCM getToken error (expected if web push not fully configured): $e');
+        debugPrint('FCM getToken error (expected if web push not fully configured): $e');
       }
 
       // 3. Listen to foreground messages
@@ -81,7 +81,7 @@ class NotificationService {
         }
       });
     } catch (e) {
-      print('Notification init error: $e');
+      debugPrint('Notification init error: $e');
     }
   }
 
@@ -102,7 +102,7 @@ class NotificationService {
         });
       }
     } catch (e) {
-      print('Failed to save notification to Firestore: $e');
+      debugPrint('Failed to save notification to Firestore: $e');
     }
 
     // In a full production app, this triggers a Cloud Function / backend endpoint.
@@ -128,7 +128,7 @@ class NotificationService {
         );
       }
     } catch (e) {
-      print('Send notification error: $e');
+      debugPrint('Send notification error: $e');
     }
   }
 }

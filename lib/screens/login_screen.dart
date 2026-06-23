@@ -196,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final now = DateTime.now();
       final timeStr = '${now.hour}:${now.minute.toString().padLeft(2, '0')} on ${now.day}/${now.month}/${now.year}';
-      final message = "⚠️ DURESS WARNING: A duress login was initiated on your Cryptaf account. The app has displayed a fake empty vault to protect your data. Time: $timeStr.";
+      final message = "âš ï¸ DURESS WARNING: A duress login was initiated on your Cryptaf account. The app has displayed a fake empty vault to protect your data. Time: $timeStr.";
 
       await http.post(
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
@@ -321,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       NotificationService().sendNotification(
         title: 'Security Alert',
-        body: '🔐 New login to your Cryptaf account detected.',
+        body: 'ðŸ” New login to your Cryptaf account detected.',
         context: context,
       );
       final setupProgress = await firestore.getOrVerifySetupProgress();
@@ -659,7 +659,9 @@ class _LoginScreenState extends State<LoginScreen> {
               if (resetEmailController.text.isNotEmpty) {
                 try {
                   await _auth.sendPasswordResetEmail(resetEmailController.text);
+                  if (!mounted) return;
                   Navigator.pop(context);
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Password reset email sent to ${resetEmailController.text}'),
@@ -667,6 +669,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   );
                 } catch (e) {
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.redAccent),
                   );

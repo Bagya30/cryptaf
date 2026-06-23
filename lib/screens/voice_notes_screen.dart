@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cryptaf/services/crypto_service.dart';
 import 'package:cryptaf/services/cloudinary_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:cryptaf/widgets/glass_container.dart';
-import 'package:cryptaf/widgets/gradient_button.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
@@ -65,7 +64,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
       try {
         await _recorder.openRecorder();
       } catch (e) {
-        print('Audio init error: $e');
+        debugPrint('Audio init error: $e');
       }
       await _player.openPlayer();
       setState(() {
@@ -315,7 +314,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '🤖 Voice recording is available on Android app only',
+                        'ðŸ¤– Voice recording is available on Android app only',
                         style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.bold),
                       ),
                     ),

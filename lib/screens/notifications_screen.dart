@@ -129,10 +129,7 @@ class NotificationsScreen extends StatelessWidget {
                     ? DateFormat('MMM dd, hh:mm a').format(ts.toDate())
                     : 'Recently';
 
-                // Automatically mark as read when displayed
-                if (!read) {
-                  doc.reference.update({'read': true});
-                }
+                // Removed automatic mark as read in build method
 
                 final color = _getNotificationColor(title);
 
@@ -148,9 +145,15 @@ class NotificationsScreen extends StatelessWidget {
                   onDismissed: (direction) {
                     doc.reference.delete();
                   },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: GlassContainer(
+                  child: GestureDetector(
+                    onTap: () {
+                      if (!read) {
+                        doc.reference.update({'read': true});
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: GlassContainer(
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,6 +223,7 @@ class NotificationsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
                   ),
                 );
               },

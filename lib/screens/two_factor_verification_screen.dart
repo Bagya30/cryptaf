@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cryptaf/screens/dashboard_screen.dart';
 import 'package:cryptaf/screens/setup_wizard_screen.dart';
 import 'package:cryptaf/services/totp_service.dart';

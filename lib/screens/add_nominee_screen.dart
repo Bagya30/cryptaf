@@ -1,7 +1,6 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -12,7 +11,6 @@ import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:cryptaf/widgets/gradient_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
 
 class AddNomineeScreen extends StatefulWidget {
   final String? docId;
@@ -111,7 +109,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
     });
   }
 
-  // ── Step 1: Send Email OTP ───────────────────────────────────────────────
+  // â”€â”€ Step 1: Send Email OTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Future<void> _sendEmailOtp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -170,7 +168,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
     }
   }
 
-  // ── Step 2: Verify Email OTP ──────────────────────────────────────────────
+  // â”€â”€ Step 2: Verify Email OTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Future<void> _verifyEmailOtp() async {
     final email = _emailCtrl.text.trim();
@@ -224,7 +222,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
   }
 
 
-  // ── Final Save ────────────────────────────────────────────────────────────
+  // â”€â”€ Final Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Future<void> _saveNominee() async {
     setState(() => _isSaving = true);
@@ -255,7 +253,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
     }
   }
 
-  // ── Build UI ──────────────────────────────────────────────────────────────
+  // â”€â”€ Build UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   @override
   Widget build(BuildContext context) {

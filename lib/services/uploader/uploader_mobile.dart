@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
@@ -35,7 +36,7 @@ class PlatformUploader extends BaseUploader {
     if (response.statusCode == 200) {
       return jsonResponse['secure_url'];
     } else {
-      print('Mobile Upload Failed: ${response.statusCode} - $responseData');
+      debugPrint('Mobile Upload Failed: ${response.statusCode} - $responseData');
       return null;
     }
   }

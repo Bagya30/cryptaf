@@ -30,6 +30,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   bool _isSendingOtp = false;
   bool _hasSent24hWarning = false;
   int _durationHours = 168;
+  DateTime? _lastActiveDate;
 
   @override
   void initState() {
@@ -45,11 +46,18 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   }
 
   void _startTimer(DateTime activationDate, int durationHours) {
-    _timer?.cancel();
     _calculateRemainingTime(activationDate, durationHours);
+    if (_timer != null && _timer!.isActive) return;
+    
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       setState(() {
-        _calculateRemainingTime(activationDate, durationHours);
+        if (_lastActiveDate != null) {
+          _calculateRemainingTime(_lastActiveDate!, _durationHours);
+        }
       });
     });
   }
@@ -77,7 +85,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         _hasSent24hWarning = true;
         NotificationService().sendNotification(
           title: 'Dead Man\'s Switch Warning',
-          body: '⚠️ Your vault will transfer in less than 24 hours! Open Cryptaf to reset.',
+          body: 'âš ï¸ Your vault will transfer in less than 24 hours! Open Cryptaf to reset.',
           context: context,
         );
       }
@@ -186,7 +194,10 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                 activationDate = ts?.toDate();
                 Timestamp? lastActiveTs = data['lastActiveTime'];
                 DateTime lastActiveDate = lastActiveTs?.toDate() ?? activationDate ?? DateTime.now();
+                _lastActiveDate = lastActiveDate;
                 _startTimer(lastActiveDate, durationHours);
+              } else {
+                _timer?.cancel();
               }
 
               _isExpired = status == 'expired';
@@ -367,7 +378,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                                       await _firestore.sendNomineeOTP(_emailController.text);
                                       NotificationService().sendNotification(
                                         title: 'Nominee Access Request',
-                                        body: '👤 A nominee is attempting to access your vault.',
+                                        body: 'ðŸ‘¤ A nominee is attempting to access your vault.',
                                         context: context,
                                       );
                                       setState(() => _isSendingOtp = false);

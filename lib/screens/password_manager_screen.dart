@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -169,12 +169,14 @@ class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
 
                       if (mounted) {
                         Navigator.pop(context);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Password encrypted and saved successfully!'), backgroundColor: Colors.greenAccent),
                         );
                       }
                     } catch (e) {
                       setDialogState(() => isSaving = false);
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error saving password: $e'), backgroundColor: Colors.redAccent),
                       );
@@ -470,6 +472,7 @@ class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
                             if (confirm == true) {
                               await _firestore.deletePasswordEntry(docId, website);
                               if (mounted) {
+                                if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('Deleted password for $website'), backgroundColor: Colors.orangeAccent),
                                 );

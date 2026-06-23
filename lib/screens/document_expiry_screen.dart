@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
-import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -18,6 +17,7 @@ class DocumentExpiryScreen extends StatefulWidget {
 class _DocumentExpiryScreenState extends State<DocumentExpiryScreen> {
   static const _gold = Color(0xFFC9A84C);
   final FirestoreService _firestore = FirestoreService();
+  final Set<String> _sentAlerts = {};
 
   Future<void> _addDocument() async {
     final titleController = TextEditingController();
@@ -142,7 +142,8 @@ class _DocumentExpiryScreenState extends State<DocumentExpiryScreen> {
 
   Future<void> _checkAndSendAlert(String docId, Map<String, dynamic> data, int daysRemaining) async {
     final alertSent = data['alertSent'] ?? false;
-    if (daysRemaining <= 30 && daysRemaining > 0 && !alertSent) {
+    if (daysRemaining <= 30 && daysRemaining > 0 && !alertSent && !_sentAlerts.contains(docId)) {
+      _sentAlerts.add(docId);
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && user.email != null) {
         try {
@@ -163,7 +164,7 @@ class _DocumentExpiryScreenState extends State<DocumentExpiryScreen> {
           // Mark as alert sent
           await FirebaseFirestore.instance.collection('users').doc(user.uid).collection('expiry_docs').doc(docId).update({'alertSent': true});
         } catch (e) {
-          print('Failed to send expiry alert: $e');
+          debugPrint('Failed to send expiry alert: $e');
         }
       }
     }

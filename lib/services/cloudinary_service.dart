@@ -1,7 +1,7 @@
+﻿import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
-import 'uploader/uploader_interface.dart';
 import 'uploader/uploader_mobile.dart'
     if (dart.library.html) 'uploader/uploader_web.dart';
 
@@ -33,7 +33,7 @@ class CloudinaryService {
         },
       );
     } catch (e) {
-      print('Cloudinary Exception: $e');
+      debugPrint('Cloudinary Exception: $e');
       return null;
     }
   }

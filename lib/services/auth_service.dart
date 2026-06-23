@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -26,7 +26,7 @@ class AuthService {
         return result.user;
       }
     } catch (e) {
-      print('Google sign in error: $e');
+      debugPrint('Google sign in error: $e');
       return null;
     }
   }
@@ -37,7 +37,7 @@ class AuthService {
       UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       return result.user;
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       return null;
     }
   }
@@ -48,7 +48,7 @@ class AuthService {
       UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       return result.user;
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       return null;
     }
   }
@@ -58,7 +58,7 @@ class AuthService {
     try {
       return await _auth.signOut();
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       return null;
     }
   }
@@ -77,7 +77,7 @@ class AuthService {
       await _auth.currentUser?.updateDisplayName(name);
       await _auth.currentUser?.reload();
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
     }
   }
 
@@ -86,7 +86,7 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -96,7 +96,7 @@ class AuthService {
     try {
       await _auth.currentUser?.delete();
     } catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       rethrow;
     }
   }

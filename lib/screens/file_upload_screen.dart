@@ -31,7 +31,6 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
   String selectedCategory = 'Documents';
   final List<String> categories = ['Documents', 'Medical', 'Financial', 'Legal'];
 
-  int _totalStorageUsed = 0;
   bool _showStorageWarning = false;
 
   @override
@@ -57,7 +56,6 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
       }
       if (mounted) {
         setState(() {
-          _totalStorageUsed = total;
           // 80% of 1GB (1GB = 1024 * 1024 * 1024 bytes = 1,073,741,824 bytes).
           // 80% of 1GB = 858,993,459 bytes.
           _showStorageWarning = total >= 858993459;

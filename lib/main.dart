@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cryptaf/screens/login_screen.dart';
@@ -8,7 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cryptaf/screens/splash_screen.dart';
 import 'package:cryptaf/screens/share_screen.dart';
 import 'package:cryptaf/screens/nominee_portal_screen.dart';
-import 'package:cryptaf/screens/email_verification_screen.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,14 +43,14 @@ void main() async {
       );
     }
   } catch (e) {
-    print("Firebase initialization error: $e");
+    debugPrint("Firebase initialization error: $e");
   }
 
   // Initialize Firebase Performance
   try {
     FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
   } catch (e) {
-    print("Firebase Performance initialization error: $e");
+    debugPrint("Firebase Performance initialization error: $e");
   }
 
   // Initialize Firebase Crashlytics for non-web platforms

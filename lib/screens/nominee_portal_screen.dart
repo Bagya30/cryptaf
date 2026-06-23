@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,7 +24,6 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
   final CryptoService _crypto = CryptoService();
 
   bool _isSendingOtp = false;
-  bool _isVerifyingOtp = false;
   bool _otpSent = false;
   String? _generatedOtp;
   String? _verifiedEmail;
@@ -271,6 +270,7 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
                 final dataUri = 'data:application/octet-stream;base64,${base64.encode(decBytes)}';
                 await launchUrl(Uri.parse(dataUri));
               } catch (e) {
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Decryption failed. Incorrect password.'), backgroundColor: Colors.redAccent),
                 );
@@ -489,7 +489,7 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
                                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                     ),
                                     subtitle: Text(
-                                      '$category • ${type.toUpperCase()}',
+                                      '$category â€¢ ${type.toUpperCase()}',
                                       style: const TextStyle(color: Colors.white54, fontSize: 12),
                                     ),
                                     trailing: IconButton(

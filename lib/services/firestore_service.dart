@@ -1,6 +1,6 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -56,7 +56,7 @@ class FirestoreService {
       }
       return fullPublicId;
     } catch (e) {
-      print('Error parsing public_id: $e');
+      debugPrint('Error parsing public_id: $e');
       return '';
     }
   }
@@ -84,10 +84,10 @@ class FirestoreService {
           'signature': signature,
         },
       );
-      print('Cloudinary Deletion Status: ${response.statusCode}');
-      print('Cloudinary Deletion Response: ${response.body}');
+      debugPrint('Cloudinary Deletion Status: ${response.statusCode}');
+      debugPrint('Cloudinary Deletion Response: ${response.body}');
     } catch (e) {
-      print('Failed to delete resource from Cloudinary: $e');
+      debugPrint('Failed to delete resource from Cloudinary: $e');
     }
   }
 
@@ -102,7 +102,7 @@ class FirestoreService {
         await _db.collection('users').doc(currentUserId).collection('files').doc(docId).delete();
       }
     } catch (e) {
-      print('Error moving to trash: $e');
+      debugPrint('Error moving to trash: $e');
     }
     await logActivity(type: 'file_delete', details: 'Moved file to trash: $fileName');
   }
@@ -119,7 +119,7 @@ class FirestoreService {
         }
       }
     } catch (e) {
-      print('Cloudinary pre-deletion error: $e');
+      debugPrint('Cloudinary pre-deletion error: $e');
     }
     await _db.collection('users').doc(currentUserId).collection('trash').doc(docId).delete();
     await logActivity(type: 'file_permanent_delete', details: 'Permanently deleted file: $fileName');
@@ -231,7 +231,7 @@ class FirestoreService {
         'lastActiveTime': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
-      print('Error updating last active time: $e');
+      debugPrint('Error updating last active time: $e');
     }
   }
 
@@ -267,7 +267,7 @@ class FirestoreService {
     });
     
     // In a real app, this would be sent via Email service
-    print("DEBUG: OTP for $email is $otp");
+    debugPrint("DEBUG: OTP for $email is $otp");
     return otp;
   }
 
@@ -357,12 +357,10 @@ class FirestoreService {
     if (currentUserId == null) return;
     try {
       await _db.collection('users').doc(currentUserId).set({
-        'setupProgress': {
-          stepKey: true,
-        }
+        'setupProgress.$stepKey': true,
       }, SetOptions(merge: true));
     } catch (e) {
-      print('Error updating setup progress step: $e');
+      debugPrint('Error updating setup progress step: $e');
     }
   }
 
@@ -430,7 +428,7 @@ class FirestoreService {
         }, SetOptions(merge: true));
       }
     } catch (e) {
-      print('Error getting/verifying setup progress: $e');
+      debugPrint('Error getting/verifying setup progress: $e');
     }
 
     return currentProgress;
@@ -458,7 +456,7 @@ class FirestoreService {
         await _db.collection('users').doc(currentUserId).collection('trash').doc(docId).delete();
       }
     } catch (e) {
-      print('Error restoring file: $e');
+      debugPrint('Error restoring file: $e');
     }
     await logActivity(type: 'file_restore', details: 'Restored $fileName from Trash');
   }
@@ -479,7 +477,7 @@ class FirestoreService {
         }
       }
     } catch (e) {
-      print('Error cleaning expired trash: $e');
+      debugPrint('Error cleaning expired trash: $e');
     }
   }
 
@@ -496,7 +494,7 @@ class FirestoreService {
         try {
           await _deleteFromCloudinary(downloadUrl);
         } catch (e) {
-          print('Cloudinary deletion failed: $e');
+          debugPrint('Cloudinary deletion failed: $e');
         }
       }
       await doc.reference.delete();

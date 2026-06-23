@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import '../../services/cloudinary_service.dart';
@@ -44,7 +44,7 @@ class _ScanScreenState extends State<ScanScreen> {
         }
       }
     } catch (e) {
-      print('Camera init error: $e');
+      debugPrint('Camera init error: $e');
     }
   }
 
@@ -63,7 +63,7 @@ class _ScanScreenState extends State<ScanScreen> {
         _capturedBytes = bytes;
       });
     } catch (e) {
-      print('Take picture error: $e');
+      debugPrint('Take picture error: $e');
     }
   }
 
@@ -192,16 +192,19 @@ class _ScanScreenState extends State<ScanScreen> {
 
                           if (mounted) {
                             Navigator.pop(ctx); // pop modal
+                            if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Document scanned and saved to vault!'),
                                 backgroundColor: Colors.green,
                               ),
                             );
+                            if (!mounted) return;
                             Navigator.pop(context); // pop scan screen
                           }
                         } else {
                           if (mounted) {
+                            if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Upload failed. Please try again.'),
@@ -211,7 +214,7 @@ class _ScanScreenState extends State<ScanScreen> {
                           }
                         }
                       } catch (e) {
-                        print('Save error: $e');
+                        debugPrint('Save error: $e');
                       } finally {
                         if (mounted) {
                           setModalState(() {

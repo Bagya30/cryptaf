@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
@@ -34,7 +34,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _loadAllData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
 
     try {
       final db = FirebaseFirestore.instance;

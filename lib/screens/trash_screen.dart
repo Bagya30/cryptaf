@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
-import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:intl/intl.dart';
 
 class TrashScreen extends StatefulWidget {

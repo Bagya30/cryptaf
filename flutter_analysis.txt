@@ -1,0 +1,220 @@
+
+┌─────────────────────────────────────────────────────────┐
+│ A new version of Flutter is available!                  │
+│                                                         │
+│ To update to the latest version, run "flutter upgrade". │
+└─────────────────────────────────────────────────────────┘
+Analyzing cryptaf...                                            
+
+warning - Unused import: 'package:cryptaf/screens/email_verification_screen.dart' - lib\main.dart:11:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\main.dart:47:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:54:5 - avoid_print
+   info - Invalid use of a private type in a public API - lib\main.dart:74:10 - library_private_types_in_public_api
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\main.dart:144:9 - deprecated_member_use
+   info - Constructors for public widgets should have a named 'key' parameter - lib\main.dart:230:7 - use_key_in_widget_constructors
+   info - The local variable '_auth' starts with an underscore - lib\main.dart:233:23 - no_leading_underscores_for_local_identifiers
+   info - Use 'const' with the constructor to improve performance - lib\main.dart:244:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\main.dart:246:18 - prefer_const_constructors
+   info - Convert 'key' to a super parameter - lib\main.dart:270:9 - use_super_parameters
+   info - Statements in an if should be enclosed in a block - lib\screens\activity_log_screen.dart:77:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\activity_log_screen.dart:78:32 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\activity_log_screen.dart:79:31 - curly_braces_in_flow_control_structures
+warning - Unused import: 'dart:typed_data' - lib\screens\add_nominee_screen.dart:4:8 - unused_import
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\screens\add_nominee_screen.dart:5:8 - unnecessary_import
+warning - Unused import: 'package:file_picker/file_picker.dart' - lib\screens\add_nominee_screen.dart:15:8 - unused_import
+warning - The value of the field '_cloudinary' isn't used - lib\screens\add_nominee_screen.dart:34:27 - unused_field
+warning - The value of the field '_sentEmailOtp' isn't used - lib\screens\add_nominee_screen.dart:50:11 - unused_field
+   info - Use 'const' with the constructor to improve performance - lib\screens\app_info_screen.dart:141:42 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\app_info_screen.dart:143:34 - prefer_const_constructors
+   info - Invalid use of a private type in a public API - lib\screens\assistant_screen.dart:9:3 - library_private_types_in_public_api
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\screens\backup_screen.dart:11:8 - unnecessary_import
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\screens\biometric_screen.dart:2:8 - unnecessary_import
+   info - The private field _isAuthenticating could be 'final' - lib\screens\biometric_screen.dart:18:8 - prefer_final_fields
+warning - Unused import: 'package:cryptaf/widgets/vault_search_delegate.dart' - lib\screens\dashboard_screen.dart:29:8 - unused_import
+warning - The value of the field '_gold' isn't used - lib\screens\dashboard_screen.dart:49:16 - unused_field
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:132:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:133:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:687:111 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:694:111 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:701:111 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:709:47 - prefer_const_constructors
+   info - Use 'const' for final variables initialized to a constant value - lib\screens\dashboard_screen.dart:829:35 - prefer_const_declarations
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:994:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:1091:41 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:1170:33 - prefer_const_constructors
+   info - A value for optional parameter 'color' isn't ever given - lib\screens\dashboard_screen.dart:1430:96 - unused_element
+   info - Use 'const' for final variables initialized to a constant value - lib\screens\dashboard_screen.dart:1505:5 - prefer_const_declarations
+   info - Invalid use of a private type in a public API - lib\screens\digital_will_screen.dart:16:3 - library_private_types_in_public_api
+warning - Unused import: 'package:cryptaf/widgets/glass_container.dart' - lib\screens\document_expiry_screen.dart:5:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\screens\document_expiry_screen.dart:166:11 - avoid_print
+   info - Convert 'key' to a super parameter - lib\screens\email_verification_screen.dart:12:9 - use_super_parameters
+   info - Invalid use of a private type in a public API - lib\screens\emergency_screen.dart:21:3 - library_private_types_in_public_api
+   info - Unnecessary 'const' keyword - lib\screens\emergency_screen.dart:256:31 - unnecessary_const
+   info - Use 'const' with the constructor to improve performance - lib\screens\emergency_screen.dart:320:38 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\emergency_screen.dart:322:43 - prefer_const_literals_to_create_immutables
+   info - Don't use 'BuildContext's across async gaps - lib\screens\emergency_screen.dart:371:41 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\emergency_screen.dart:376:43 - use_build_context_synchronously
+   info - Use 'const' for final variables initialized to a constant value - lib\screens\emergency_screen.dart:431:5 - prefer_const_declarations
+   info - Invalid use of a private type in a public API - lib\screens\file_upload_screen.dart:17:3 - library_private_types_in_public_api
+warning - The value of the field '_totalStorageUsed' isn't used - lib\screens\file_upload_screen.dart:34:7 - unused_field
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart' - lib\screens\file_view_screen.dart:11:8 - unnecessary_import
+   info - Invalid use of a private type in a public API - lib\screens\file_view_screen.dart:46:3 - library_private_types_in_public_api
+   info - Use 'const' with the constructor to improve performance - lib\screens\file_view_screen.dart:505:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\file_view_screen.dart:565:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\file_view_screen.dart:739:31 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\screens\file_view_screen.dart:785:48 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\file_view_screen.dart:790:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\file_view_screen.dart:791:32 - prefer_const_constructors
+   info - Invalid use of a private type in a public API - lib\screens\login_screen.dart:28:3 - library_private_types_in_public_api
+   info - Use 'const' with the constructor to improve performance - lib\screens\login_screen.dart:79:22 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\login_screen.dart:80:27 - prefer_const_literals_to_create_immutables
+   info - Use 'const' for final variables initialized to a constant value - lib\screens\login_screen.dart:282:5 - prefer_const_declarations
+   info - Don't use 'BuildContext's across async gaps - lib\screens\login_screen.dart:325:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\login_screen.dart:336:15 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\login_screen.dart:341:15 - use_build_context_synchronously
+warning - The value of the local variable 'anonResult' isn't used - lib\screens\login_screen.dart:504:39 - unused_local_variable
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\login_screen.dart:509:37 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\login_screen.dart:565:25 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\screens\login_screen.dart:662:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\login_screen.dart:663:40 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\login_screen.dart:670:40 - use_build_context_synchronously
+   info - The private field _isVerifyingOtp could be 'final' - lib\screens\nominee_portal_screen.dart:27:8 - prefer_final_fields
+warning - The value of the field '_isVerifyingOtp' isn't used - lib\screens\nominee_portal_screen.dart:27:8 - unused_field
+   info - Unnecessary cast - lib\screens\nominee_portal_screen.dart:71:30 - unnecessary_cast
+   info - Don't use 'BuildContext's across async gaps - lib\screens\nominee_portal_screen.dart:187:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\nominee_portal_screen.dart:274:38 - use_build_context_synchronously
+warning - The value of the local variable 'trustLevel' isn't used - lib\screens\nominee_screen.dart:244:11 - unused_local_variable
+   info - The declaration '_trustBadge' isn't referenced - lib\screens\nominee_screen.dart:396:10 - unused_element
+   info - Invalid use of a private type in a public API - lib\screens\otp_screen.dart:14:3 - library_private_types_in_public_api
+   info - Use 'const' with the constructor to improve performance - lib\screens\otp_screen.dart:174:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\otp_screen.dart:175:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\otp_screen.dart:176:21 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\otp_screen.dart:177:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\otp_screen.dart:179:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\otp_screen.dart:180:24 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\otp_screen.dart:181:29 - prefer_const_literals_to_create_immutables
+   info - Invalid use of a private type in a public API - lib\screens\password_manager_screen.dart:17:3 - library_private_types_in_public_api
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\password_manager_screen.dart:171:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\password_manager_screen.dart:172:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\password_manager_screen.dart:178:44 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\password_manager_screen.dart:473:54 - use_build_context_synchronously
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\screens\pin_lock_screen.dart:2:8 - unnecessary_import
+   info - Convert 'key' to a super parameter - lib\screens\pin_lock_screen.dart:14:9 - use_super_parameters
+   info - Invalid use of a private type in a public API - lib\screens\pin_lock_screen.dart:17:3 - library_private_types_in_public_api
+   info - The declaration '_useBiometric' isn't referenced - lib\screens\pin_lock_screen.dart:185:16 - unused_element
+   info - Use 'const' with the constructor to improve performance - lib\screens\profile_screen.dart:192:16 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\screens\profile_screen.dart:491:44 - use_build_context_synchronously
+   info - Convert 'key' to a super parameter - lib\screens\scan\scan_mobile.dart:10:9 - use_super_parameters
+   info - Invalid use of a private type in a public API - lib\screens\scan\scan_mobile.dart:13:3 - library_private_types_in_public_api
+   info - Don't invoke 'print' in production code - lib\screens\scan\scan_mobile.dart:47:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\screens\scan\scan_mobile.dart:66:7 - avoid_print
+   info - The local variable '_passwordController' starts with an underscore - lib\screens\scan\scan_mobile.dart:71:33 - no_leading_underscores_for_local_identifiers
+   info - The local variable '_crypto' starts with an underscore - lib\screens\scan\scan_mobile.dart:161:45 - no_leading_underscores_for_local_identifiers
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_mobile.dart:167:50 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_mobile.dart:194:43 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_mobile.dart:195:50 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_mobile.dart:201:43 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_mobile.dart:205:50 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\screens\scan\scan_mobile.dart:214:25 - avoid_print
+warning - Unused import: 'dart:async' - lib\screens\scan\scan_web.dart:1:8 - unused_import
+   info - Don't use web-only libraries outside Flutter web plugin packages - lib\screens\scan\scan_web.dart:2:1 - avoid_web_libraries_in_flutter
+   info - Convert 'key' to a super parameter - lib\screens\scan\scan_web.dart:11:9 - use_super_parameters
+   info - Invalid use of a private type in a public API - lib\screens\scan\scan_web.dart:14:3 - library_private_types_in_public_api
+   info - The local variable '_passwordController' starts with an underscore - lib\screens\scan\scan_web.dart:53:33 - no_leading_underscores_for_local_identifiers
+   info - The local variable '_crypto' starts with an underscore - lib\screens\scan\scan_web.dart:143:45 - no_leading_underscores_for_local_identifiers
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_web.dart:164:43 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_web.dart:165:50 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_web.dart:171:43 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\scan\scan_web.dart:175:50 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\screens\scan\scan_web.dart:184:25 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\screens\scan\scan_web.dart:227:20 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\secure_notes_screen.dart:100:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\secure_notes_screen.dart:101:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\secure_notes_screen.dart:107:44 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\secure_notes_screen.dart:210:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\secure_notes_screen.dart:383:54 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\secure_notes_screen.dart:394:44 - use_build_context_synchronously
+   info - Invalid use of a private type in a public API - lib\screens\security_settings_screen.dart:22:3 - library_private_types_in_public_api
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:156:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:157:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:166:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:255:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:256:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:361:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:362:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:564:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:565:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:763:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:764:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:981:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:982:46 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\security_settings_screen.dart:1073:34 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\security_settings_screen.dart:1109:25 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:1205:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\security_settings_screen.dart:1284:54 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\security_settings_screen.dart:1303:32 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\signup_screen.dart:68:22 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\signup_screen.dart:69:27 - prefer_const_literals_to_create_immutables
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\signup_screen.dart:279:41 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\signup_screen.dart:284:50 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\signup_screen.dart:285:55 - prefer_const_literals_to_create_immutables
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\signup_screen.dart:327:55 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\signup_screen.dart:349:27 - prefer_const_constructors
+warning - Unused import: 'package:cryptaf/widgets/glass_container.dart' - lib\screens\trash_screen.dart:5:8 - unused_import
+   info - Invalid use of a private type in a public API - lib\screens\two_factor_verification_screen.dart:18:3 - library_private_types_in_public_api
+   info - Don't use 'BuildContext's across async gaps - lib\screens\two_factor_verification_screen.dart:55:9 - use_build_context_synchronously
+warning - Unused import: 'package:url_launcher/url_launcher.dart' - lib\screens\vault_health_screen.dart:9:8 - unused_import
+   info - Don't use 'BuildContext's across async gaps - lib\screens\vault_health_screen.dart:123:30 - use_build_context_synchronously
+   info - Statements in an if should be enclosed in a block - lib\screens\vault_health_screen.dart:191:41 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\vault_health_screen.dart:192:46 - curly_braces_in_flow_control_structures
+   info - Invalid use of a private type in a public API - lib\screens\vault_view_screen.dart:17:3 - library_private_types_in_public_api
+warning - Unused import: 'package:cryptaf/widgets/gradient_button.dart' - lib\screens\voice_notes_screen.dart:8:8 - unused_import
+   info - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart' - lib\screens\voice_notes_screen.dart:13:8 - unnecessary_import
+   info - Invalid use of a private type in a public API - lib\screens\voice_notes_screen.dart:23:3 - library_private_types_in_public_api
+   info - Don't invoke 'print' in production code - lib\screens\voice_notes_screen.dart:68:9 - avoid_print
+   info - Use 'const' for final variables initialized to a constant value - lib\screens\voice_notes_screen.dart:114:7 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - lib\screens\voice_notes_screen.dart:215:7 - prefer_const_declarations
+   info - Use 'const' with the constructor to improve performance - lib\screens\voice_notes_screen.dart:312:24 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:29:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:40:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:51:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:61:7 - avoid_print
+   info - Don't return 'null' from a method with a return type of 'void' - lib\services\auth_service.dart:62:7 - avoid_returning_null_for_void
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:80:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:89:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\auth_service.dart:99:7 - avoid_print
+warning - Unused import: 'uploader/uploader_interface.dart' - lib\services\cloudinary_service.dart:4:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\services\cloudinary_service.dart:36:7 - avoid_print
+warning - Unused import: 'dart:typed_data' - lib\services\firestore_service.dart:3:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:59:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:87:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:88:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:90:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:105:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:122:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:234:7 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\services\firestore_service.dart:266:39 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:270:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:365:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:433:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:461:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:482:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_service.dart:499:11 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\services\inactivity_timer_service.dart:56:22 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\services\notification_service.dart:26:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\notification_service.dart:58:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\notification_service.dart:84:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\notification_service.dart:105:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\notification_service.dart:131:7 - avoid_print
+   info - The imported package 'http_parser' isn't a dependency of the importing package - lib\services\uploader\uploader_mobile.dart:4:8 - depend_on_referenced_packages
+   info - Don't invoke 'print' in production code - lib\services\uploader\uploader_mobile.dart:38:7 - avoid_print
+   info - Don't use web-only libraries outside Flutter web plugin packages - lib\services\uploader\uploader_web.dart:3:1 - avoid_web_libraries_in_flutter
+   info - Don't invoke 'print' in production code - lib\services\uploader\uploader_web.dart:37:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\uploader\uploader_web.dart:43:7 - avoid_print
+   info - Convert 'key' to a super parameter - lib\widgets\glass_container.dart:13:9 - use_super_parameters
+   info - Use 'const' for final variables initialized to a constant value - lib\widgets\glass_container.dart:26:5 - prefer_const_declarations
+   info - Convert 'key' to a super parameter - lib\widgets\solid_button.dart:8:9 - use_super_parameters
+   info - Use a 'SizedBox' to add whitespace to a layout - lib\widgets\solid_button.dart:17:12 - sized_box_for_whitespace
+   info - Use 'const' with the constructor to improve performance - lib\widgets\solid_button.dart:42:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\widget_test.dart:15:29 - prefer_const_constructors
+

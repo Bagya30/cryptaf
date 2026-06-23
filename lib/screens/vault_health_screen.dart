@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
@@ -6,7 +6,6 @@ import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:cryptaf/widgets/gradient_button.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;

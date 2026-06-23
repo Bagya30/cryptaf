@@ -154,6 +154,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       await _firestore.updateSecuritySettings(true, currentBiometrics, totpSecret: encryptedSecret);
                       if (mounted) {
                         Navigator.pop(context);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('2FA Enabled successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -163,6 +164,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                         isVerifying = false;
                       });
                       if (mounted) {
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Invalid code. Please try again.'), backgroundColor: Colors.redAccent),
                         );
@@ -252,7 +254,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       }, SetOptions(merge: true));
 
                       if (mounted) {
+                        if (!mounted) return;
                         Navigator.pop(context);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Vault PIN set successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -358,7 +362,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       }, SetOptions(merge: true));
 
                       if (mounted) {
+                        if (!mounted) return;
                         Navigator.pop(context);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Duress password set successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -561,7 +567,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       await user.updatePassword(newPassController.text);
 
                       if (mounted) {
+                        if (!mounted) return;
                         Navigator.pop(context);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Master password updated successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -760,7 +768,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       }
 
                       if (mounted) {
+                        if (!mounted) return;
                         Navigator.pop(context);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('All vault files re-encrypted successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -978,7 +988,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       });
 
                       if (mounted) {
+                        if (!mounted) return;
                         Navigator.pop(context);
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Vault encryption password reset and files re-encrypted successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -1281,6 +1293,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                                 'activeSessions': [],
                               }, SetOptions(merge: true));
                               if (mounted) {
+                                if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('All devices logged out successfully.'), backgroundColor: Colors.greenAccent),
                                 );
