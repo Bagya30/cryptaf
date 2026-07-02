@@ -12,12 +12,28 @@ exports.askGemini = functions.https.onRequest((req, res) => {
     }
 
     try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).send({ error: 'Unauthorized: Missing or invalid token' });
+      }
+
+      const idToken = authHeader.split('Bearer ')[1];
+      try {
+        await admin.auth().verifyIdToken(idToken);
+      } catch (error) {
+        return res.status(401).send({ error: 'Unauthorized: Invalid token' });
+      }
+
       const userMessage = req.body.message;
       if (!userMessage) {
         return res.status(400).send({ error: "Message is required" });
       }
 
-      const apiKey = "AIzaSyAdRxbvUm4QcVbn0l5RUuFfCk2m8vFzF0U";
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).send({ error: "Gemini API key is not configured" });
+      }
+      
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
       
       const payload = {
