@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -14,10 +14,10 @@ class PasswordManagerScreen extends StatefulWidget {
   const PasswordManagerScreen({super.key, this.isTab = false});
 
   @override
-  _PasswordManagerScreenState createState() => _PasswordManagerScreenState();
+  PasswordManagerScreenState createState() => PasswordManagerScreenState();
 }
 
-class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
+class PasswordManagerScreenState extends State<PasswordManagerScreen> {
   final FirestoreService _firestore = FirestoreService();
   final CryptoService _crypto = CryptoService();
 
@@ -166,17 +166,17 @@ class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
                     try {
                       final encryptedPass = _crypto.encryptString(passwordCtrl.text, _crypto.masterAppKey);
                       await _firestore.addPasswordEntry(websiteCtrl.text.trim(), usernameCtrl.text.trim(), encryptedPass);
-
-                      if (mounted) {
-                        Navigator.pop(context);
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Password encrypted and saved successfully!'), backgroundColor: Colors.greenAccent),
-                        );
-                      }
+                      if (!mounted) return;
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context);
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Password encrypted and saved successfully!'), backgroundColor: Colors.greenAccent),
+                      );
                     } catch (e) {
                       setDialogState(() => isSaving = false);
                       if (!mounted) return;
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error saving password: $e'), backgroundColor: Colors.redAccent),
                       );
@@ -473,6 +473,7 @@ class _PasswordManagerScreenState extends State<PasswordManagerScreen> {
                               await _firestore.deletePasswordEntry(docId, website);
                               if (mounted) {
                                 if (!mounted) return;
+                                // ignore: use_build_context_synchronously
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('Deleted password for $website'), backgroundColor: Colors.orangeAccent),
                                 );

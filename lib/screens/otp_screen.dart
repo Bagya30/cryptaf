@@ -11,10 +11,10 @@ class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key, required this.email});
 
   @override
-  _OtpScreenState createState() => _OtpScreenState();
+  OtpScreenState createState() => OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class OtpScreenState extends State<OtpScreen> {
   final List<TextEditingController> _controllers = List.generate(6, (index) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   final FirestoreService _firestore = FirestoreService();
@@ -171,22 +171,22 @@ class AccessGrantedScreen extends StatelessWidget {
         elevation: 0,
         title: const Text('Access Granted', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: AnimatedBackground(
+      body: const AnimatedBackground(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(24.0),
               child: GlassContainer(
                 child: Column(
                   children: [
-                    const Icon(Icons.lock_open, color: Color(0xFFC9A84C), size: 60),
-                    const SizedBox(height: 16),
-                    const Text(
+                    Icon(Icons.lock_open, color: Color(0xFFC9A84C), size: 60),
+                    SizedBox(height: 16),
+                    Text(
                       'Vault Unlocked',
                       style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: 8),
+                    Text(
                       'You now have emergency access to all secure files.',
                       style: TextStyle(color: Colors.white70, fontSize: 14),
                       textAlign: TextAlign.center,
@@ -195,7 +195,7 @@ class AccessGrantedScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const Expanded(
+            Expanded(
               child: VaultViewScreen(),
             ),
           ],

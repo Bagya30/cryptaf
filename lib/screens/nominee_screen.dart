@@ -6,6 +6,8 @@ import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+const Color _gold = Color(0xFFFFD700);
+
 class NomineeScreen extends StatefulWidget {
   final String? userId;
   final bool isTab;
@@ -17,7 +19,6 @@ class NomineeScreen extends StatefulWidget {
 }
 
 class _NomineeScreenState extends State<NomineeScreen> {
-  static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0A0A0A);
 
   final FirestoreService _firestore = FirestoreService();
@@ -241,7 +242,7 @@ class _NomineeScreenState extends State<NomineeScreen> {
     final data = doc.data() as Map<String, dynamic>;
     final name = data['name'] ?? '—';
     final relationship = data['relationship'] ?? 'Family';
-    final trustLevel = data['trustLevel'] ?? 'Secondary';
+//     final trustLevel = data['trustLevel'] ?? 'Secondary';
     final updatedAt = (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
     final emailVerified = data['emailVerified'] ?? false;
     final fullyVerified = emailVerified;
@@ -390,25 +391,6 @@ class _NomineeScreenState extends State<NomineeScreen> {
         const SizedBox(width: 4),
         Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w500)),
       ],
-    );
-  }
-
-  Widget _trustBadge(String level) {
-    Color color = Colors.white24;
-    if (level.contains('Primary')) color = _gold;
-    if (level.contains('Secondary')) color = Colors.blueAccent;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.4)),
-      ),
-      child: Text(
-        level.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold),
-      ),
     );
   }
 

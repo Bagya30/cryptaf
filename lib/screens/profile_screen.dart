@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cryptaf/services/auth_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:cryptaf/widgets/glass_container.dart';
@@ -189,8 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0A0A0A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Colors.white12)),
-        title: Row(
-          children: const [
+        title: const Row(
+          children: [
             Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 28),
             SizedBox(width: 10),
             Text('Delete Account', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -488,6 +488,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (await canLaunchUrl(url)) {
                       await launchUrl(url, mode: LaunchMode.externalApplication);
                     } else {
+                      if (!mounted) return;
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Could not open Play Store link')),
                       );

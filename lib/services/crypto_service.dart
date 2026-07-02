@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EncryptionResult {
   final Uint8List encryptedBytes;
@@ -71,7 +72,7 @@ class CryptoService {
   }
 
   // Master key for internal app-level encryption (e.g. TOTP secrets)
-  String get masterAppKey => enc.Key.fromUtf8('CryptafMasterKey32BytesLong12345').base64;
+  String get masterAppKey => enc.Key.fromUtf8(dotenv.env['MASTER_APP_KEY'] ?? 'CryptafMasterKey32BytesLong12345').base64;
 
   String encryptString(String text, String key) {
     final res = encryptFile(utf8.encode(text), key);

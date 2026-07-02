@@ -14,10 +14,10 @@ class VaultViewScreen extends StatefulWidget {
   const VaultViewScreen({super.key, this.category});
 
   @override
-  _VaultViewScreenState createState() => _VaultViewScreenState();
+  VaultViewScreenState createState() => VaultViewScreenState();
 }
 
-class _VaultViewScreenState extends State<VaultViewScreen> {
+class VaultViewScreenState extends State<VaultViewScreen> {
   final FirestoreService _firestore = FirestoreService();
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();

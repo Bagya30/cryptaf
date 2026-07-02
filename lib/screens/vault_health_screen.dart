@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
@@ -25,20 +25,20 @@ class _VaultHealthScreenState extends State<VaultHealthScreen> {
 
   int _calculateScore(bool has2FA, bool hasEmerg, int nomineeCount, int fileCount) {
     int score = 50; // Base score
-    if (has2FA) score += 20;
-    if (hasEmerg) score += 10;
-    if (nomineeCount > 0) score += 15;
-    if (fileCount > 0) score += 5;
+    if (has2FA) { score += 20; }
+    if (hasEmerg) { score += 10; }
+    if (nomineeCount > 0) { score += 15; }
+    if (fileCount > 0) { score += 5; }
     return score.clamp(0, 100);
   }
 
   List<String> _getRecommendations(bool has2FA, bool hasEmerg, int nomineeCount, int fileCount) {
     List<String> recs = [];
-    if (!has2FA) recs.add('Enable Two-Factor Authentication in Security Settings.');
-    if (!hasEmerg) recs.add('Enable Dead Man\'s Switch (Emergency Protocol).');
-    if (nomineeCount == 0) recs.add('Add at least one Trusted Nominee for inheritance.');
-    if (fileCount == 0) recs.add('Upload your first secure document.');
-    if (recs.isEmpty) recs.add('Your vault is fully optimized and secure!');
+    if (!has2FA) { recs.add('Enable Two-Factor Authentication in Security Settings.'); }
+    if (!hasEmerg) { recs.add('Enable Dead Man\'s Switch (Emergency Protocol).'); }
+    if (nomineeCount == 0) { recs.add('Add at least one Trusted Nominee for inheritance.'); }
+    if (fileCount == 0) { recs.add('Upload your first secure document.'); }
+    if (recs.isEmpty) { recs.add('Your vault is fully optimized and secure!'); }
     return recs;
   }
 
@@ -119,6 +119,7 @@ class _VaultHealthScreenState extends State<VaultHealthScreen> {
       if (kIsWeb) {
         downloadFileWeb(url, 'vault_health_report.pdf');
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Download available on web version')),
         );
@@ -158,7 +159,7 @@ class _VaultHealthScreenState extends State<VaultHealthScreen> {
             bool has2FA = false;
             if (secSnap.hasData && secSnap.data!.exists) {
               final d = secSnap.data!.data() as Map<String, dynamic>?;
-              if (d != null) has2FA = d['twoFactorEnabled'] ?? false;
+              if (d != null) { has2FA = d['twoFactorEnabled'] ?? false; }
             }
 
             return StreamBuilder<DocumentSnapshot>(
@@ -167,7 +168,7 @@ class _VaultHealthScreenState extends State<VaultHealthScreen> {
                 bool hasEmerg = false;
                 if (emergSnap.hasData && emergSnap.data!.exists) {
                   final d = emergSnap.data!.data() as Map<String, dynamic>?;
-                  if (d != null) hasEmerg = d['emergencyEnabled'] ?? false;
+                  if (d != null) { hasEmerg = d['emergencyEnabled'] ?? false; }
                 }
 
                 return StreamBuilder<QuerySnapshot>(
@@ -187,8 +188,8 @@ class _VaultHealthScreenState extends State<VaultHealthScreen> {
                         final recs = _getRecommendations(has2FA, hasEmerg, nomineeCount, fileCount);
 
                         Color scoreColor = Colors.greenAccent;
-                        if (score < 50) scoreColor = Colors.redAccent;
-                        else if (score < 80) scoreColor = Colors.orangeAccent;
+                        if (score < 50) { scoreColor = Colors.redAccent; }
+                        else if (score < 80) { scoreColor = Colors.orangeAccent; }
 
                         return SingleChildScrollView(
                           padding: const EdgeInsets.all(20),

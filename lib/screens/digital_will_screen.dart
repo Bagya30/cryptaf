@@ -13,10 +13,10 @@ class DigitalWillScreen extends StatefulWidget {
   const DigitalWillScreen({super.key});
 
   @override
-  _DigitalWillScreenState createState() => _DigitalWillScreenState();
+  DigitalWillScreenState createState() => DigitalWillScreenState();
 }
 
-class _DigitalWillScreenState extends State<DigitalWillScreen> {
+class DigitalWillScreenState extends State<DigitalWillScreen> {
   final QuillController _controller = QuillController.basic();
   final CryptoService _crypto = CryptoService();
   final String _willDocId = 'user_will';

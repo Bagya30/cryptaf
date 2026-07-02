@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,13 +10,13 @@ import 'dart:async';
 class PinLockScreen extends StatefulWidget {
   final VoidCallback? onUnlocked;
 
-  const PinLockScreen({Key? key, this.onUnlocked}) : super(key: key);
+  const PinLockScreen({super.key, this.onUnlocked});
 
   @override
-  _PinLockScreenState createState() => _PinLockScreenState();
+  PinLockScreenState createState() => PinLockScreenState();
 }
 
-class _PinLockScreenState extends State<PinLockScreen> {
+class PinLockScreenState extends State<PinLockScreen> {
   String enteredPin = '';
   bool hasError = false;
   bool isChecking = false;
@@ -182,9 +181,6 @@ class _PinLockScreenState extends State<PinLockScreen> {
     }
   }
 
-  Future<void> _useBiometric() async {
-    // Biometric removed
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cryptaf/services/firestore_service.dart';
@@ -95,17 +95,17 @@ class _SecureNotesScreenState extends State<SecureNotesScreen> {
                       final encryptedContent = _crypto.encryptString(contentCtrl.text.trim(), _crypto.masterAppKey);
 
                       await _firestore.addNoteEntry(encryptedTitle, encryptedContent);
-
-                      if (mounted) {
-                        Navigator.pop(context);
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Note encrypted and saved successfully!'), backgroundColor: Colors.greenAccent),
-                        );
-                      }
+                      if (!mounted) return;
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context);
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Note encrypted and saved successfully!'), backgroundColor: Colors.greenAccent),
+                      );
                     } catch (e) {
                       setDialogState(() => isSaving = false);
                       if (!mounted) return;
+                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error saving note: $e'), backgroundColor: Colors.redAccent),
                       );
@@ -210,6 +210,7 @@ class _SecureNotesScreenState extends State<SecureNotesScreen> {
                 final isValid = await _crypto.verifyVaultPassword(passCtrl.text);
                 if (isValid) {
                   if (!mounted) return;
+                  // ignore: use_build_context_synchronously
                   if (mounted) Navigator.pop(context, true);
                 } else {
                   setDialogState(() {
@@ -384,6 +385,7 @@ class _SecureNotesScreenState extends State<SecureNotesScreen> {
                               if (confirm == true) {
                                 await _firestore.deleteNoteEntry(doc.id);
                                 if (!mounted) return;
+                                // ignore: use_build_context_synchronously
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('Note deleted')),
                                 );
@@ -396,6 +398,7 @@ class _SecureNotesScreenState extends State<SecureNotesScreen> {
                         final isValid = await _promptVaultPassword();
                         if (isValid) {
                           if (!mounted) return;
+                          // ignore: use_build_context_synchronously
                           _showNoteDetails(context, decTitle, decContent);
                         }
                       },

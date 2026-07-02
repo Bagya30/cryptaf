@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/services/crypto_service.dart';
@@ -8,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:typed_data';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -43,10 +42,10 @@ class FileViewScreen extends StatefulWidget {
   });
 
   @override
-  _FileViewScreenState createState() => _FileViewScreenState();
+  FileViewScreenState createState() => FileViewScreenState();
 }
 
-class _FileViewScreenState extends State<FileViewScreen> {
+class FileViewScreenState extends State<FileViewScreen> {
   final FirestoreService _firestore = FirestoreService();
   final CryptoService _crypto = CryptoService();
   final TextEditingController _passwordController = TextEditingController();
@@ -311,6 +310,7 @@ class _FileViewScreenState extends State<FileViewScreen> {
     }
   }
 
+  // ignore: use_build_context_synchronously
   Widget _buildMetaRow(String label, String value, Color textColor, Color subColor, {bool isHighlight = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -502,8 +502,8 @@ class _FileViewScreenState extends State<FileViewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               Icon(Icons.remove_red_eye_outlined, color: Color(0xFFC9A84C), size: 20),
               SizedBox(width: 8),
               Text(
@@ -562,9 +562,9 @@ class _FileViewScreenState extends State<FileViewScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.greenAccent.withOpacity(0.5)),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Icon(Icons.shield, size: 14, color: Colors.greenAccent),
                   SizedBox(width: 4),
                   Text(
@@ -736,9 +736,9 @@ class _FileViewScreenState extends State<FileViewScreen> {
                       onTap: _isDecrypting ? null : _decryptAndView,
                       child: Center(
                         child: _isDecrypting
-                            ? Row(
+                            ? const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
+                                children: [
                                   SizedBox(
                                     width: 20,
                                     height: 20,
@@ -782,15 +782,17 @@ class _FileViewScreenState extends State<FileViewScreen> {
                       borderRadius: BorderRadius.circular(16),
                       onTap: () async {
                         if (!await launchUrl(Uri.parse(widget.downloadUrl))) {
+                          if (!mounted) return;
+                          // ignore: use_build_context_synchronously
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Could not open file')),
                           );
                         }
                       },
-                      child: Center(
+                      child: const Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Icon(Icons.open_in_new, color: Colors.black),
                             SizedBox(width: 12),
                             Text(

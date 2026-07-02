@@ -59,7 +59,7 @@ class AuthService {
       return await _auth.signOut();
     } catch (e) {
       debugPrint(e.toString());
-      return null;
+      return;
     }
   }
 

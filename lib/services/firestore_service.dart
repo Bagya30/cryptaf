@@ -1,9 +1,10 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -67,8 +68,9 @@ class FirestoreService {
       if (publicId.isEmpty) return;
 
       final timestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round().toString();
-      const apiKey = '781795518437784';
-      const apiSecret = 'KnYzuXmZb85IiFK-iEoVJz4fVPM';
+      final apiKey = dotenv.env['CLOUDINARY_API_KEY'] ?? '';
+      final apiSecret = dotenv.env['CLOUDINARY_API_SECRET'] ?? '';
+      final cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
 
       // construct signature: sorted alphabetically
       final stringToSign = 'public_id=$publicId&timestamp=$timestamp$apiSecret';
@@ -76,7 +78,7 @@ class FirestoreService {
       final signature = sha1.convert(bytes).toString();
 
       final response = await http.delete(
-        Uri.parse('https://api.cloudinary.com/v1_1/dbkwa74hv/image/destroy'),
+        Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/destroy'),
         body: {
           'public_id': publicId,
           'api_key': apiKey,
@@ -263,11 +265,11 @@ class FirestoreService {
     await _db.collection('users').doc(currentUserId).collection('nominee_otps').doc(email).set({
       'otp': otp,
       'createdAt': FieldValue.serverTimestamp(),
-      'expiresAt': DateTime.now().add(Duration(minutes: 10)).millisecondsSinceEpoch,
+      'expiresAt': DateTime.now().add(const Duration(minutes: 10)).millisecondsSinceEpoch,
     });
     
     // In a real app, this would be sent via Email service
-    debugPrint("DEBUG: OTP for $email is $otp");
+
     return otp;
   }
 

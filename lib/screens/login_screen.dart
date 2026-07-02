@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,10 +26,10 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final AuthService _auth = AuthService();
   final _formKey = GlobalKey<FormState>();
 
@@ -76,11 +77,11 @@ class _LoginScreenState extends State<LoginScreen> {
             builder: (context) => AlertDialog(
               backgroundColor: const Color(0xFF0A0A0A),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white12)),
-              title: Row(
+              title: const Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 28),
-                  const SizedBox(width: 10),
-                  const Text('Save Recovery Key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 28),
+                  SizedBox(width: 10),
+                  Text('Save Recovery Key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
                 ],
               ),
               content: Column(
@@ -177,9 +178,9 @@ class _LoginScreenState extends State<LoginScreen> {
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'service_id': 'service_ojzr03j',
-          'template_id': 'template_j7plaal',
-          'user_id': 'swqxQASivvKsrJjvQ',
+          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_DEFAULT'] ?? '',
+          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
           'template_params': {
             'email': userEmail,
             'passcode': 'BRUTE FORCE LOCKOUT ALERT: 5 failed login attempts detected. Your account has been temporarily locked for 30 minutes for security.',
@@ -202,9 +203,9 @@ class _LoginScreenState extends State<LoginScreen> {
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'service_id': 'service_ojzr03j',
-          'template_id': 'template_login_alert',
-          'user_id': 'swqxQASivvKsrJjvQ',
+          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
+          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
           'template_params': {
             'email': userEmail,
             'time': timeStr,
@@ -228,9 +229,9 @@ class _LoginScreenState extends State<LoginScreen> {
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'service_id': 'service_ojzr03j',
-          'template_id': 'template_login_alert',
-          'user_id': 'swqxQASivvKsrJjvQ',
+          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
+          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
           'template_params': {
             'email': userEmail,
             'time': timeStr,
@@ -252,9 +253,9 @@ class _LoginScreenState extends State<LoginScreen> {
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'service_id': 'service_ojzr03j',
-          'template_id': 'template_login_alert',
-          'user_id': 'swqxQASivvKsrJjvQ',
+          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
+          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
           'template_params': {
             'email': userEmail,
             'time': timeStr,
@@ -279,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('Failed to fetch IP: $e');
     }
 
-    final String deviceInfo = kIsWeb ? 'Web Browser (Flutter Web)' : 'Mobile Client';
+    const String deviceInfo = kIsWeb ? 'Web Browser (Flutter Web)' : 'Mobile Client';
 
     final userDocRef = FirebaseFirestore.instance.collection('users').doc(uid);
     final userDoc = await userDocRef.get();
@@ -319,6 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } else {
+      if (!mounted) return;
       NotificationService().sendNotification(
         title: 'Security Alert',
         body: 'ðŸ” New login to your Cryptaf account detected.',
@@ -332,11 +334,13 @@ class _LoginScreenState extends State<LoginScreen> {
           final pendingToken = prefs.getString('pending_share_token');
           if (pendingToken != null && pendingToken.isNotEmpty) {
             await prefs.remove('pending_share_token');
+            if (!mounted) return;
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => ShareScreen(token: pendingToken)),
             );
           } else {
+            if (!mounted) return;
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -501,11 +505,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
 
                               if (isDuressLogin) {
-                                final anonResult = await FirebaseAuth.instance.signInAnonymously();
+                                await FirebaseAuth.instance.signInAnonymously();
                                 if (mounted) {
                                   setState(() => _isLoading = false);
                                   _sendDuressAlertEmail(email);
                                   Navigator.pushReplacement(
+                                    // ignore: use_build_context_synchronously
                                     context,
                                     MaterialPageRoute(builder: (context) => const DashboardScreen()),
                                   );
@@ -562,8 +567,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        Row(
-                          children: const [
+                        const Row(
+                          children: [
                             Expanded(child: Divider(color: Colors.white12)),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -660,8 +665,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 try {
                   await _auth.sendPasswordResetEmail(resetEmailController.text);
                   if (!mounted) return;
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                   if (!mounted) return;
+                  // ignore: use_build_context_synchronously
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Password reset email sent to ${resetEmailController.text}'),
@@ -670,6 +677,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 } catch (e) {
                   if (!mounted) return;
+                  // ignore: use_build_context_synchronously
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.redAccent),
                   );

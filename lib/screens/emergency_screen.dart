@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
@@ -18,10 +19,10 @@ class EmergencyScreen extends StatefulWidget {
   const EmergencyScreen({super.key});
 
   @override
-  _EmergencyScreenState createState() => _EmergencyScreenState();
+  EmergencyScreenState createState() => EmergencyScreenState();
 }
 
-class _EmergencyScreenState extends State<EmergencyScreen> {
+class EmergencyScreenState extends State<EmergencyScreen> {
   final FirestoreService _firestore = FirestoreService();
   final TextEditingController _emailController = TextEditingController();
   Timer? _timer;
@@ -129,9 +130,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'service_id': 'service_ojzr03j',
-          'template_id': 'template_login_alert',
-          'user_id': 'swqxQASivvKsrJjvQ',
+          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
+          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
           'template_params': {
             'email': nomineeEmail,
             'time': timeStr,
@@ -264,7 +265,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Inactivity Timeout', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4),
                               Text('Timer duration before release', style: TextStyle(color: Colors.white54, fontSize: 12)),
                             ],
                           ),
@@ -328,12 +329,12 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
                               ),
-                              child: Row(
+                              child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.emergency_share, color: Colors.redAccent, size: 20),
-                                  const SizedBox(width: 10),
-                                  const Text(
+                                  Icon(Icons.emergency_share, color: Colors.redAccent, size: 20),
+                                  SizedBox(width: 10),
+                                  Text(
                                     'Access Transfer Initiated',
                                     style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
                                   ),
@@ -376,14 +377,17 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                                       if (_emailController.text.isEmpty) return;
                                       setState(() => _isSendingOtp = true);
                                       await _firestore.sendNomineeOTP(_emailController.text);
+                                      if (!mounted) return;
                                       NotificationService().sendNotification(
                                         title: 'Nominee Access Request',
                                         body: 'ðŸ‘¤ A nominee is attempting to access your vault.',
+                                        // ignore: use_build_context_synchronously
                                         context: context,
                                       );
                                       setState(() => _isSendingOtp = false);
                                       if (mounted) {
                                         Navigator.push(
+                                          // ignore: use_build_context_synchronously
                                           context,
                                           MaterialPageRoute(builder: (context) => OtpScreen(email: _emailController.text)),
                                         );
@@ -439,7 +443,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   Future<void> _printEmergencyCard() async {
     final user = FirebaseAuth.instance.currentUser;
     final userName = user?.displayName ?? user?.email ?? 'Vault Owner';
-    final portalUrl = 'https://cryptaf-36296.web.app/nominee-portal';
+    const portalUrl = 'https://cryptaf-36296.web.app/nominee-portal';
 
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async {

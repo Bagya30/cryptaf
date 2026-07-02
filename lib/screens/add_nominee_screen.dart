@@ -1,11 +1,11 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
-import 'package:flutter/foundation.dart'; // for kIsWeb
+// for kIsWeb
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cryptaf/services/firestore_service.dart';
-import 'package:cryptaf/services/cloudinary_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:cryptaf/widgets/gradient_button.dart';
@@ -29,7 +29,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
   static const _bg = Color(0xFF0A0A0A);
 
   final FirestoreService _firestore = FirestoreService();
-  final CloudinaryService _cloudinary = CloudinaryService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final _formKey = GlobalKey<FormState>();
@@ -45,7 +44,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
   String _trustLevel = 'Primary Nominee';
 
   // Email OTP
-  String? _sentEmailOtp;
   bool _isSendingEmailOtp = false;
   bool _emailVerified = false;
 
@@ -137,9 +135,9 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'service_id': 'service_ojzr03j',
-          'template_id': 'template_j7plaal',
-          'user_id': 'swqxQASivvKsrJjvQ',
+          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_DEFAULT'] ?? '',
+          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
           'template_params': {
             'email': email,
             'passcode': otp,
@@ -153,7 +151,6 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
       if (response.statusCode == 200) {
         _startTimer();
         setState(() {
-          _sentEmailOtp = otp;
           _currentStep = NomineeStep.emailOtp;
           _isSendingEmailOtp = false;
         });

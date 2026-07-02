@@ -74,9 +74,9 @@ class ActivityLogScreen extends StatelessWidget {
 
         Color color = Colors.grey.withOpacity(0.2); // inactive
         if (count > 0) {
-          if (count == 1) color = Colors.green.shade800;
-          else if (count == 2) color = Colors.green.shade600;
-          else if (count > 2) color = Colors.green.shade400;
+          if (count == 1) { color = Colors.green.shade800; }
+          else if (count == 2) { color = Colors.green.shade600; }
+          else if (count > 2) { color = Colors.green.shade400; }
         }
 
         days.add(

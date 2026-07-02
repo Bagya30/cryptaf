@@ -14,10 +14,10 @@ class FileUploadScreen extends StatefulWidget {
   const FileUploadScreen({super.key});
 
   @override
-  _FileUploadScreenState createState() => _FileUploadScreenState();
+  FileUploadScreenState createState() => FileUploadScreenState();
 }
 
-class _FileUploadScreenState extends State<FileUploadScreen> {
+class FileUploadScreenState extends State<FileUploadScreen> {
   final FirestoreService _firestore = FirestoreService();
   final CloudinaryService _cloudinary = CloudinaryService();
   final CryptoService _crypto = CryptoService();

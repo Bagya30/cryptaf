@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cryptaf/screens/login_screen.dart';
@@ -15,30 +15,32 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'dart:async';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cryptaf/web_url_stub.dart' if (dart.library.html) 'dart:html' as html;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   try {
     if (kIsWeb) {
       await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: "AIzaSyC6I0ZzkEA0Q5YzPdC1p2PB3gkAfVPfE04",
-          authDomain: "cryptaf-36296.firebaseapp.com",
-          projectId: "cryptaf-36296",
-          storageBucket: "cryptaf-36296.firebasestorage.app",
-          messagingSenderId: "482809286288",
-          appId: "1:482809286288:web:86b2ec852e51ab87a3d215",
-          measurementId: "G-302JBTTKRV",
+        options: FirebaseOptions(
+          apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '',
+          authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN'] ?? '',
+          projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+          storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
+          messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+          appId: dotenv.env['FIREBASE_APP_ID_WEB'] ?? '',
+          measurementId: dotenv.env['FIREBASE_MEASUREMENT_ID'] ?? '',
         ),
       );
     } else {
       await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: "AIzaSyC6I0ZzkEA0Q5YzPdC1p2PB3gkAfVPfE04",
-          appId: "1:482809286288:android:86e3906f841f9e90a3d215",
-          messagingSenderId: "482809286288",
-          projectId: "cryptaf-36296",
+        options: FirebaseOptions(
+          apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '',
+          appId: dotenv.env['FIREBASE_APP_ID_ANDROID'] ?? '',
+          messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+          projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
         ),
       );
     }
@@ -69,15 +71,14 @@ void main() async {
 
 class CryptafApp extends StatefulWidget {
   const CryptafApp({super.key});
-
-  static _CryptafAppState? of(BuildContext context) =>
-      context.findAncestorStateOfType<_CryptafAppState>();
+  static CryptafAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<CryptafAppState>();
 
   @override
-  State<CryptafApp> createState() => _CryptafAppState();
+  State<CryptafApp> createState() => CryptafAppState();
 }
 
-class _CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
+class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
   ThemeMode _themeMode = ThemeMode.dark;
   String _initialRoute = '/';
   Timer? _activityTimer;
@@ -140,7 +141,7 @@ class _CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
       cardColor: const Color(0xFF111111),
       primaryColor: const Color(0xFF0A0A0A),
       colorScheme: ColorScheme.fromSwatch(brightness: Brightness.dark).copyWith(
-        background: const Color(0xFF0A0A0A),
+        surface: const Color(0xFF0A0A0A),
         secondary: const Color(0xFFC9A84C), // Antique Gold Accent
       ),
       textTheme: GoogleFonts.oxaniumTextTheme(Theme.of(context).textTheme).apply(
@@ -227,12 +228,14 @@ class _CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
 }
 
 class AuthenticationWrapper extends StatelessWidget {
+  const AuthenticationWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final AuthService _auth = AuthService();
+    final AuthService auth = AuthService();
     
     return StreamBuilder(
-      stream: _auth.user,
+      stream: auth.user,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
@@ -240,9 +243,9 @@ class AuthenticationWrapper extends StatelessWidget {
             body: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.secondary)),
           );
         } else if (snapshot.hasData) {
-          return DashboardScreen();
+          return const DashboardScreen();
         } else {
-          return LoginScreen();
+          return const LoginScreen();
         }
       },
     );
@@ -266,13 +269,13 @@ class FadePageTransitionsBuilder extends PageTransitionsBuilder {
 class GoldShimmerText extends StatefulWidget {
   final String text;
   final TextStyle? style;
-  const GoldShimmerText({Key? key, required this.text, this.style}) : super(key: key);
+  const GoldShimmerText({super.key, required this.text, this.style});
 
   @override
-  State<GoldShimmerText> createState() => _GoldShimmerTextState();
+  State<GoldShimmerText> createState() => GoldShimmerTextState();
 }
 
-class _GoldShimmerTextState extends State<GoldShimmerText> with SingleTickerProviderStateMixin {
+class GoldShimmerTextState extends State<GoldShimmerText> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override

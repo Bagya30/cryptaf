@@ -39,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
         } catch (_) {}
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AuthenticationWrapper()),
+            MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
           );
         }
       }
@@ -66,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen> {
             );
           } else {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => AuthenticationWrapper()),
+              MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
             );
           }
         }
@@ -74,7 +74,7 @@ class _SplashScreenState extends State<SplashScreen> {
         if (mounted && !_navigated) {
           _navigated = true;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AuthenticationWrapper()),
+            MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
           );
         }
       }

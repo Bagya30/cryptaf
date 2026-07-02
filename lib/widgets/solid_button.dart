@@ -6,15 +6,15 @@ class SolidButton extends StatelessWidget {
   final bool isLoading;
 
   const SolidButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
@@ -39,7 +39,7 @@ class SolidButton extends StatelessWidget {
               )
             : Text(
                 text,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,

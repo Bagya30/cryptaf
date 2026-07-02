@@ -1,14 +1,14 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'uploader/uploader_mobile.dart'
     if (dart.library.html) 'uploader/uploader_web.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CloudinaryService {
-  static const String _cloudName = 'dbkwa74hv';
-  static const String _apiKey = '781795518437784';
-  static const String _apiSecret = 'KnYzuXmZb85IiFK-iEoVJz4fVPM';
+  static String get _cloudName => dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
+  static String get _apiKey => dotenv.env['CLOUDINARY_API_KEY'] ?? '';
+  static String get _apiSecret => dotenv.env['CLOUDINARY_API_SECRET'] ?? '';
 
   Future<String?> uploadFile(String fileName, Uint8List fileBytes, {String resourceType = 'auto'}) async {
     try {

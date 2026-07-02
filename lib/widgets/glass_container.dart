@@ -11,7 +11,7 @@ class GlassContainer extends StatelessWidget {
   final Color? borderColor;
 
   const GlassContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.width,
     this.height,
@@ -19,11 +19,11 @@ class GlassContainer extends StatelessWidget {
     this.margin,
     this.borderRadius = 24.0,
     this.borderColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    final gold = const Color(0xFFC9A84C);
+    const gold = Color(0xFFC9A84C);
 
     return Container(
       width: width,

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cryptaf/screens/dashboard_screen.dart';
 import 'package:cryptaf/screens/setup_wizard_screen.dart';
 import 'package:cryptaf/services/totp_service.dart';
@@ -15,10 +15,10 @@ class TwoFactorVerificationScreen extends StatefulWidget {
   const TwoFactorVerificationScreen({super.key, required this.encryptedSecret});
 
   @override
-  _TwoFactorVerificationScreenState createState() => _TwoFactorVerificationScreenState();
+  TwoFactorVerificationScreenState createState() => TwoFactorVerificationScreenState();
 }
 
-class _TwoFactorVerificationScreenState extends State<TwoFactorVerificationScreen> {
+class TwoFactorVerificationScreenState extends State<TwoFactorVerificationScreen> {
   final TOTPService _totp = TOTPService();
   final CryptoService _crypto = CryptoService();
   final TextEditingController _codeController = TextEditingController();
@@ -49,6 +49,7 @@ class _TwoFactorVerificationScreenState extends State<TwoFactorVerificationScree
     if (isValid) {
       final FirestoreService firestore = FirestoreService();
       await firestore.logActivity(type: 'login_2fa', details: 'User logged in with 2FA');
+      if (!mounted) return;
       NotificationService().sendNotification(
         title: 'Security Alert',
         body: '🔐 New login to your Cryptaf account detected.',

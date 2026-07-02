@@ -53,8 +53,8 @@ class InactivityTimerService {
                 borderRadius: BorderRadius.circular(20),
                 side: const BorderSide(color: Colors.white12),
               ),
-              title: Row(
-                children: const [
+              title: const Row(
+                children: [
                   Icon(Icons.timer_outlined, color: Color(0xFFC9A84C), size: 28),
                   SizedBox(width: 12),
                   Text('Inactivity Warning', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),

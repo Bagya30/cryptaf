@@ -138,8 +138,8 @@ class AppInfoScreen extends StatelessWidget {
                         context: context,
                         applicationName: 'Cryptaf',
                         applicationVersion: '1.0.0',
-                        applicationIcon: Padding(
-                          padding: const EdgeInsets.all(12.0),
+                        applicationIcon: const Padding(
+                          padding: EdgeInsets.all(12.0),
                           child: Icon(Icons.shield_outlined, color: _gold, size: 48),
                         ),
                       ),

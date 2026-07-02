@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/auth_service.dart';
 import 'package:cryptaf/services/firestore_service.dart';
@@ -45,7 +45,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0A0A0A);
 
   final AuthService _auth = AuthService();
@@ -128,8 +127,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 _VaultTab(user: _auth.currentUser, firestore: _firestore),
                 NomineeScreen(userId: uid, isTab: true),
-                PasswordManagerScreen(isTab: true),
-                ProfileScreen(isTab: true),
+                const PasswordManagerScreen(isTab: true),
+                const ProfileScreen(isTab: true),
               ],
             ),
           ),
@@ -683,21 +682,21 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                                           animation: _dot1Controller,
                                                           builder: (context, child) => Transform.translate(
                                                             offset: Offset(cos(_dot1Controller.value * 2 * pi) * 25, sin(_dot1Controller.value * 2 * pi) * 25),
-                                                            child: Container(width: 5, height: 5, decoration: BoxDecoration(color: const Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
+                                                            child: Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
                                                           ),
                                                         ),
                                                         AnimatedBuilder(
                                                           animation: _dot2Controller,
                                                           builder: (context, child) => Transform.translate(
                                                             offset: Offset(cos(_dot2Controller.value * 2 * pi + 2 * pi / 3) * 30, sin(_dot2Controller.value * 2 * pi + 2 * pi / 3) * 30),
-                                                            child: Container(width: 5, height: 5, decoration: BoxDecoration(color: const Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
+                                                            child: Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
                                                           ),
                                                         ),
                                                         AnimatedBuilder(
                                                           animation: _dot3Controller,
                                                           builder: (context, child) => Transform.translate(
                                                             offset: Offset(cos(_dot3Controller.value * 2 * pi + 4 * pi / 3) * 22, sin(_dot3Controller.value * 2 * pi + 4 * pi / 3) * 22),
-                                                            child: Container(width: 5, height: 5, decoration: BoxDecoration(color: const Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
+                                                            child: Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
                                                           ),
                                                         ),
                                                       ],
@@ -705,9 +704,9 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                                   ),
                                                 ),
                                               const SizedBox(width: 12),
-                                              Column(
+                                              const Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: const [
+                                                children: [
                                                   Text('VAULT SECURED', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 1.1)),
                                                   SizedBox(height: 2),
                                                   Text('Last sync: 2 mins ago', style: TextStyle(color: Colors.white54, fontSize: 12)),
@@ -825,7 +824,7 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                               // Storage Status Card
                               Builder(
                                 builder: (context) {
-                                  final double totalQuotaBytes = 25.0 * 1024.0 * 1024.0 * 1024.0; // 25 GB
+                                  const double totalQuotaBytes = 25.0 * 1024.0 * 1024.0 * 1024.0; // 25 GB
                                   final double usedMB = totalBytes / (1024.0 * 1024.0);
                                   final double percentage = totalBytes / totalQuotaBytes;
 
@@ -990,9 +989,9 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                               ),
                               const SizedBox(height: 14),
                               if (recentFiles.isEmpty)
-                                GlassContainer(
-                                  padding: const EdgeInsets.all(20),
-                                  child: const Center(
+                                const GlassContainer(
+                                  padding: EdgeInsets.all(20),
+                                  child: Center(
                                     child: Text('No files uploaded yet. Tap Upload to get started.', style: TextStyle(color: Colors.white54, fontSize: 13)),
                                   ),
                                 )
@@ -1087,9 +1086,9 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                       ),
                                       if (emergEnabled) ...[
                                         const SizedBox(height: 16),
-                                        Row(
+                                        const Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: const [
+                                          children: [
                                             Text('Countdown Progress', style: TextStyle(color: Colors.white70, fontSize: 12)),
                                             Text('Active', style: TextStyle(color: _gold, fontSize: 12, fontWeight: FontWeight.bold)),
                                           ],
@@ -1166,9 +1165,9 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                               ),
                               const SizedBox(height: 14),
                               if (recentLogs.isEmpty)
-                                GlassContainer(
-                                  padding: const EdgeInsets.all(20),
-                                  child: const Center(
+                                const GlassContainer(
+                                  padding: EdgeInsets.all(20),
+                                  child: Center(
                                     child: Text('No recent activity recorded.', style: TextStyle(color: Colors.white54, fontSize: 13)),
                                   ),
                                 )
@@ -1424,9 +1423,9 @@ class _QuickActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
-  final Color color;
+  final Color color = Colors.grey;
 
-  const _QuickActionButton({required this.label, required this.icon, required this.onTap, this.color = Colors.white54});
+  const _QuickActionButton({required this.label, required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1501,7 +1500,7 @@ class _LiquidPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final gold = const Color(0xFFC9A84C);
+    const gold = Color(0xFFC9A84C);
     
     // Background circle
     canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2, Paint()..color = Colors.white12);

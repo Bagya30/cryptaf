@@ -1,5 +1,6 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:math';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -67,7 +68,7 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
         if (parentRef != null) {
           final userDoc = await parentRef.get();
           if (userDoc.exists) {
-            final userData = userDoc.data() as Map<String, dynamic>?;
+            final userData = userDoc.data();
             final isEnabled = userData?['emergencyEnabled'] ?? false;
             final status = userData?['emergencyStatus'] ?? 'disabled';
 
@@ -98,9 +99,9 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'service_id': 'service_ojzr03j',
-          'template_id': 'template_login_alert',
-          'user_id': 'swqxQASivvKsrJjvQ',
+          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
+          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
           'template_params': {
             'email': email,
             'time': timeStr,
@@ -183,6 +184,7 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
         _vaultFiles = filesSnap.docs;
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load files: $e'), backgroundColor: Colors.redAccent),
       );
@@ -271,6 +273,7 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
                 await launchUrl(Uri.parse(dataUri));
               } catch (e) {
                 if (!mounted) return;
+                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Decryption failed. Incorrect password.'), backgroundColor: Colors.redAccent),
                 );

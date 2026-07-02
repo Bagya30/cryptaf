@@ -19,10 +19,10 @@ class SecuritySettingsScreen extends StatefulWidget {
   const SecuritySettingsScreen({super.key});
 
   @override
-  _SecuritySettingsScreenState createState() => _SecuritySettingsScreenState();
+  SecuritySettingsScreenState createState() => SecuritySettingsScreenState();
 }
 
-class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with SingleTickerProviderStateMixin {
+class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with SingleTickerProviderStateMixin {
   final FirestoreService _firestore = FirestoreService();
   final TOTPService _totp = TOTPService();
   final CryptoService _crypto = CryptoService();
@@ -153,8 +153,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       final encryptedSecret = _crypto.encryptString(secret, _crypto.masterAppKey);
                       await _firestore.updateSecuritySettings(true, currentBiometrics, totpSecret: encryptedSecret);
                       if (mounted) {
+                        // ignore: use_build_context_synchronously
                         Navigator.pop(context);
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('2FA Enabled successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -165,6 +167,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       });
                       if (mounted) {
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Invalid code. Please try again.'), backgroundColor: Colors.redAccent),
                         );
@@ -255,8 +258,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
 
                       if (mounted) {
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         Navigator.pop(context);
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Vault PIN set successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -363,8 +368,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
 
                       if (mounted) {
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         Navigator.pop(context);
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Duress password set successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -568,8 +575,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
 
                       if (mounted) {
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         Navigator.pop(context);
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Master password updated successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -769,8 +778,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
 
                       if (mounted) {
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         Navigator.pop(context);
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('All vault files re-encrypted successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -989,8 +1000,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
 
                       if (mounted) {
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         Navigator.pop(context);
                         if (!mounted) return;
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Vault encryption password reset and files re-encrypted successfully!'), backgroundColor: Colors.greenAccent),
                         );
@@ -1082,9 +1095,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Colors.greenAccent.withOpacity(0.5)),
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
+                            children: [
                               Icon(Icons.shield, size: 14, color: Colors.greenAccent),
                               SizedBox(width: 6),
                               Text(
@@ -1118,11 +1131,11 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                           padding: EdgeInsets.symmetric(vertical: 8.0),
                           child: Divider(color: Colors.white12),
                         ),
-                        ListTile(
+                        const ListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text('Biometric Login', style: TextStyle(color: Colors.white38, fontWeight: FontWeight.w600, fontSize: 16)),
-                          subtitle: const Text('Coming Soon', style: TextStyle(color: Colors.white24, fontSize: 13)),
-                          trailing: const Icon(Icons.fingerprint, color: Colors.white24),
+                          title: Text('Biometric Login', style: TextStyle(color: Colors.white38, fontWeight: FontWeight.w600, fontSize: 16)),
+                          subtitle: Text('Coming Soon', style: TextStyle(color: Colors.white24, fontSize: 13)),
+                          trailing: Icon(Icons.fingerprint, color: Colors.white24),
                         ),
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.0),
@@ -1214,6 +1227,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
 
                             if (mounted) {
                               showDialog(
+                                // ignore: use_build_context_synchronously
                                 context: context,
                                 builder: (context) => AlertDialog(
                                   backgroundColor: const Color(0xFF0A0A0A),
@@ -1294,6 +1308,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                               }, SetOptions(merge: true));
                               if (mounted) {
                                 if (!mounted) return;
+                                // ignore: use_build_context_synchronously
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('All devices logged out successfully.'), backgroundColor: Colors.greenAccent),
                                 );
@@ -1313,9 +1328,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Si
                       final List<dynamic> sessions = docData?['activeSessions'] as List<dynamic>? ?? [];
 
                       if (sessions.isEmpty) {
-                        return GlassContainer(
-                          padding: const EdgeInsets.all(20),
-                          child: const Center(
+                        return const GlassContainer(
+                          padding: EdgeInsets.all(20),
+                          child: Center(
                             child: Text('No active sessions tracked.', style: TextStyle(color: Colors.white54, fontSize: 13)),
                           ),
                         );

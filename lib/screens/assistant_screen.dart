@@ -6,10 +6,10 @@ class AssistantScreen extends StatefulWidget {
   const AssistantScreen({super.key});
 
   @override
-  _AssistantScreenState createState() => _AssistantScreenState();
+  AssistantScreenState createState() => AssistantScreenState();
 }
 
-class _AssistantScreenState extends State<AssistantScreen> {
+class AssistantScreenState extends State<AssistantScreen> {
   final GeminiService _gemini = GeminiService();
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];

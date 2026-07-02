@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DocumentExpiryScreen extends StatefulWidget {
   const DocumentExpiryScreen({super.key});
@@ -151,9 +152,9 @@ class _DocumentExpiryScreenState extends State<DocumentExpiryScreen> {
             Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'service_id': 'service_cryptaf',
-              'template_id': 'template_w0l42n4', // using existing template for generic alerts if possible, or fallback
-              'user_id': 'Xv5xTig0W30d0K4Jt',
+              'service_id': dotenv.env['EMAILJS_SERVICE_ID_CRYPTAF'] ?? '',
+              'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_DOCUMENT_EXPIRY'] ?? '', // using existing template for generic alerts if possible, or fallback
+              'user_id': dotenv.env['EMAILJS_USER_ID_DOCUMENT_EXPIRY'] ?? '',
               'template_params': {
                 'to_email': user.email,
                 'subject': 'Action Required: Document Expiring Soon',

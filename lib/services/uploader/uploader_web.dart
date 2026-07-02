@@ -1,8 +1,8 @@
-﻿import 'package:flutter/foundation.dart';
+// ignore_for_file: avoid_web_libraries_in_flutter
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
-import 'dart:typed_data';
 import 'uploader_interface.dart';
 
 class PlatformUploader extends BaseUploader {

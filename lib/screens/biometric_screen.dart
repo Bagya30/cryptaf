@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cryptaf/main.dart'; // For AuthenticationWrapper
@@ -15,7 +14,7 @@ class BiometricScreen extends StatefulWidget {
 }
 
 class _BiometricScreenState extends State<BiometricScreen> {
-  bool _isAuthenticating = false;
+  final bool _isAuthenticating = false;
 
   static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0A0A0A);
@@ -31,7 +30,7 @@ class _BiometricScreenState extends State<BiometricScreen> {
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => AuthenticationWrapper()),
+        MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
       );
     }
   }

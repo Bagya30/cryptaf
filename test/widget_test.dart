@@ -12,7 +12,7 @@ import 'package:cryptaf/main.dart';
 
 void main() {
   testWidgets('App loads smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(CryptafApp());
+    await tester.pumpWidget(const CryptafApp());
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

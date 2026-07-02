@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cryptaf/services/crypto_service.dart';
@@ -9,7 +9,6 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -19,10 +18,10 @@ class VoiceNotesScreen extends StatefulWidget {
   const VoiceNotesScreen({super.key});
 
   @override
-  _VoiceNotesScreenState createState() => _VoiceNotesScreenState();
+  VoiceNotesScreenState createState() => VoiceNotesScreenState();
 }
 
-class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
+class VoiceNotesScreenState extends State<VoiceNotesScreen> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   final FlutterSoundPlayer _player = FlutterSoundPlayer();
   final CryptoService _crypto = CryptoService();
@@ -110,7 +109,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
   Future<void> _startRecording() async {
     if (!_isRecorderInitialized) return;
     try {
-      final String filePath = 'voice_note_temp.m4a';
+      const String filePath = 'voice_note_temp.m4a';
       await _recorder.startRecorder(
         toFile: filePath,
         codec: Codec.aacMP4,
@@ -211,7 +210,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
 
       // On web, we can play from a data URI
       final base64Audio = base64Encode(decryptedBytes);
-      final mime = kIsWeb ? 'audio/webm' : 'audio/mp4';
+      const mime = kIsWeb ? 'audio/webm' : 'audio/mp4';
       final dataUri = 'data:$mime;base64,$base64Audio';
 
       await _player.startPlayer(
@@ -308,8 +307,8 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen> {
                   border: Border.all(color: const Color(0xFFC9A84C)),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  children: const [
+                child: const Row(
+                  children: [
                     Icon(Icons.info_outline, color: Color(0xFFC9A84C)),
                     SizedBox(width: 12),
                     Expanded(

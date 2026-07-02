@@ -65,11 +65,11 @@ class _SignupScreenState extends State<SignupScreen> {
             builder: (context) => AlertDialog(
               backgroundColor: const Color(0xFF0A0A0A),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white12)),
-              title: Row(
+              title: const Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 28),
-                  const SizedBox(width: 10),
-                  const Text('Save Recovery Key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 28),
+                  SizedBox(width: 10),
+                  Text('Save Recovery Key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
                 ],
               ),
               content: Column(
@@ -276,16 +276,17 @@ class _SignupScreenState extends State<SignupScreen> {
 
                                     if (mounted) {
                                       showDialog(
+                                        // ignore: use_build_context_synchronously
                                         context: context,
                                         barrierDismissible: false,
                                         builder: (context) => AlertDialog(
                                           backgroundColor: const Color(0xFF0A0A0A),
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white12)),
-                                          title: Row(
+                                          title: const Row(
                                             children: [
-                                              const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 28),
-                                              const SizedBox(width: 10),
-                                              const Text('Save Recovery Key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                                              Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 28),
+                                              SizedBox(width: 10),
+                                              Text('Save Recovery Key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
                                             ],
                                           ),
                                           content: Column(
@@ -324,6 +325,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                                   }
                                                   if (mounted) {
                                                     Navigator.pushReplacement(
+                                                      // ignore: use_build_context_synchronously
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (_) => EmailVerificationScreen(email: user.email ?? ''),
@@ -346,8 +348,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             },
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            children: const [
+                          const Row(
+                            children: [
                               Expanded(child: Divider(color: Colors.white12)),
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 16),

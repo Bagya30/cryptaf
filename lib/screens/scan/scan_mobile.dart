@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import '../../services/cloudinary_service.dart';
@@ -7,13 +7,13 @@ import '../../services/crypto_service.dart';
 import '../../widgets/solid_button.dart';
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({Key? key}) : super(key: key);
+  const ScanScreen({super.key});
 
   @override
-  _ScanScreenState createState() => _ScanScreenState();
+  ScanScreenState createState() => ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> {
+class ScanScreenState extends State<ScanScreen> {
   CameraController? _controller;
   List<CameraDescription>? _cameras;
   bool _isInitialized = false;
@@ -68,7 +68,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   void _showCategorySelection() {
-    final TextEditingController _passwordController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF141414),
@@ -120,7 +120,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   const Text('Vault Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: _passwordController,
+                    controller: passwordController,
                     obscureText: true,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
@@ -143,7 +143,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     text: _isProcessing ? 'Saving...' : 'Save to Vault',
                     isLoading: _isProcessing,
                     onPressed: () async {
-                      if (_passwordController.text.isEmpty) {
+                      if (passwordController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please enter your vault password'), backgroundColor: Colors.redAccent),
                         );
@@ -158,12 +158,13 @@ class _ScanScreenState extends State<ScanScreen> {
                       });
 
                       try {
-                        final CryptoService _crypto = CryptoService();
-                        final isValid = await _crypto.verifyVaultPassword(_passwordController.text);
+                        final CryptoService crypto = CryptoService();
+                        final isValid = await crypto.verifyVaultPassword(passwordController.text);
                         if (!isValid) {
                           if (mounted) {
                             setModalState(() => _isProcessing = false);
                             setState(() => _isProcessing = false);
+                            // ignore: use_build_context_synchronously
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Incorrect vault password'), backgroundColor: Colors.redAccent),
                             );
@@ -171,9 +172,9 @@ class _ScanScreenState extends State<ScanScreen> {
                           return;
                         }
 
-                        final salt = _crypto.generateSalt();
-                        final key = _crypto.deriveKey(_passwordController.text, salt);
-                        final encResult = _crypto.encryptFile(_capturedBytes!, key, ivBase64: null);
+                        final salt = crypto.generateSalt();
+                        final key = crypto.deriveKey(passwordController.text, salt);
+                        final encResult = crypto.encryptFile(_capturedBytes!, key, ivBase64: null);
 
                         final String fileName = 'Scan_${DateTime.now().millisecondsSinceEpoch}.jpg';
                         final url = await CloudinaryService().uploadFile(fileName, encResult.encryptedBytes);
@@ -191,8 +192,10 @@ class _ScanScreenState extends State<ScanScreen> {
                           );
 
                           if (mounted) {
+                            // ignore: use_build_context_synchronously
                             Navigator.pop(ctx); // pop modal
                             if (!mounted) return;
+                            // ignore: use_build_context_synchronously
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Document scanned and saved to vault!'),
@@ -200,11 +203,13 @@ class _ScanScreenState extends State<ScanScreen> {
                               ),
                             );
                             if (!mounted) return;
+                            // ignore: use_build_context_synchronously
                             Navigator.pop(context); // pop scan screen
                           }
                         } else {
                           if (mounted) {
                             if (!mounted) return;
+                            // ignore: use_build_context_synchronously
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Upload failed. Please try again.'),
