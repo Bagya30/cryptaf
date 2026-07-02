@@ -112,7 +112,7 @@ class _AddNomineeScreenState extends State<AddNomineeScreen> {
   Future<void> _sendEmailOtp() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final otp = (100000 + Random().nextInt(900000)).toString();
+    final otp = (100000 + Random.secure().nextInt(900000)).toString();
     final email = _emailCtrl.text.trim();
 
     setState(() => _isSendingEmailOtp = true);

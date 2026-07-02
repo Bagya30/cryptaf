@@ -88,7 +88,7 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
       }
 
       // Generate 6-digit OTP
-      final randomOtp = (100000 + Random().nextInt(900000)).toString();
+      final randomOtp = (100000 + Random.secure().nextInt(900000)).toString();
 
       // Send via EmailJS
       final now = DateTime.now();

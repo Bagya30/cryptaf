@@ -145,7 +145,7 @@ class FileViewScreenState extends State<FileViewScreen> {
 
   Future<void> _copySecureLink() async {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rnd = Random();
+    final rnd = Random.secure();
     final token = String.fromCharCodes(Iterable.generate(16, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
 
     await FirebaseFirestore.instance.collection('share_links').doc(token).set({
