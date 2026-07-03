@@ -458,109 +458,134 @@ class LoginScreenState extends State<LoginScreen> {
                           onPressed: () async {
                             if (_formKey.currentState!.validate()) {
                               setState(() => _isLoading = true);
+                              setState(() => error = ''); // Clear previous errors
 
-                              final sanitizedEmail = email.toLowerCase().trim();
-                              DocumentSnapshot<Map<String, dynamic>>? attemptDoc;
                               try {
-                                attemptDoc = await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).get();
+                                final sanitizedEmail = email.toLowerCase().trim();
+                                DocumentSnapshot<Map<String, dynamic>>? attemptDoc;
+                                try {
+                                  attemptDoc = await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).get();
 
-                                if (attemptDoc.exists) {
-                                  final data = attemptDoc.data()!;
-                                  final int lockedUntil = data['lockedUntil'] ?? 0;
-                                  final now = DateTime.now().millisecondsSinceEpoch;
-                                  if (now < lockedUntil) {
-                                    final int remainingMinutes = ((lockedUntil - now) / 60000).ceil();
+                                  if (attemptDoc.exists) {
+                                    final data = attemptDoc.data()!;
+                                    final int lockedUntil = data['lockedUntil'] ?? 0;
+                                    final now = DateTime.now().millisecondsSinceEpoch;
+                                    if (now < lockedUntil) {
+                                      final int remainingMinutes = ((lockedUntil - now) / 60000).ceil();
+                                      if (mounted) {
+                                        setState(() {
+                                          error = 'Account locked due to too many failed attempts. Try again in $remainingMinutes minutes.';
+                                          _isLoading = false;
+                                        });
+                                      }
+                                      return;
+                                    }
+                                  }
+                                } catch (e) {
+                                  debugPrint('Brute force check error: $e');
+                                }
+
+                                bool isDuressLogin = false;
+                                try {
+                                  final usersSnap = await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .where('email', isEqualTo: sanitizedEmail)
+                                      .limit(1)
+                                      .get();
+
+                                  if (usersSnap.docs.isNotEmpty) {
+                                    final userData = usersSnap.docs.first.data();
+                                    final String? encryptedDuressPassword = userData['duressPassword'] as String?;
+                                    if (encryptedDuressPassword != null && encryptedDuressPassword.isNotEmpty) {
+                                      final crypto = CryptoService();
+                                      try {
+                                        final String decryptedDuress = crypto.decryptString(encryptedDuressPassword, crypto.masterAppKey);
+                                        if (decryptedDuress == password) {
+                                          isDuressLogin = true;
+                                        }
+                                      } catch (e) {
+                                        debugPrint('Duress decrypt failed: $e');
+                                      }
+                                    }
+                                  }
+                                } catch (e) {
+                                  debugPrint('User query error (likely permission denied for unauth): $e');
+                                }
+
+                                if (isDuressLogin) {
+                                  await FirebaseAuth.instance.signInAnonymously();
+                                  if (mounted) {
+                                    setState(() => _isLoading = false);
+                                    _sendDuressAlertEmail(email);
+                                    Navigator.pushReplacement(
+                                      // ignore: use_build_context_synchronously
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                                    );
+                                  }
+                                  return;
+                                }
+
+                                dynamic result = await _auth.signInWithEmailAndPassword(email, password);
+
+                                if (mounted) {
+                                  if (result == null) {
+                                    int attempts = 1;
+                                    if (attemptDoc != null && attemptDoc.exists) {
+                                      attempts = (attemptDoc.data()?['failedAttempts'] ?? 0) + 1;
+                                    }
+                                    int lockedUntil = 0;
+                                    String errMsg = 'Invalid email or password.';
+
+                                    if (attempts >= 5) {
+                                      lockedUntil = DateTime.now().millisecondsSinceEpoch + (30 * 60 * 1000);
+                                      errMsg = 'Account locked for 30 minutes due to 5 failed login attempts.';
+                                      _sendLockoutEmail(email);
+                                    } else if (attempts >= 3) {
+                                      errMsg = 'Warning: $attempts failed login attempts. Account will lock after 5 fails.';
+                                    }
+
+                                    try {
+                                      await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).set({
+                                        'failedAttempts': attempts,
+                                        'lockedUntil': lockedUntil,
+                                      }, SetOptions(merge: true));
+                                    } catch (e) {
+                                      debugPrint('Error updating login attempts: $e');
+                                    }
+
                                     setState(() {
-                                      error = 'Account locked due to too many failed attempts. Try again in $remainingMinutes minutes.';
+                                      error = errMsg;
                                       _isLoading = false;
                                     });
-                                    return;
+                                  } else {
+                                    try {
+                                      await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).set({
+                                        'failedAttempts': 0,
+                                        'lockedUntil': 0,
+                                      }, SetOptions(merge: true));
+                                    } catch (e) {
+                                      debugPrint('Error clearing login attempts: $e');
+                                    }
+
+                                    setState(() => _isLoading = false);
+                                    _sendLoginAlertEmail(email);
+
+                                    final doc = await FirebaseFirestore.instance.collection('users').doc(result.uid).get();
+                                    final data = doc.data();
+                                    final bool twoFactorEnabled = data?['twoFactorEnabled'] ?? false;
+                                    final String? encryptedSecret = data?['totpSecret'] as String?;
+
+                                    await _handlePostLogin(result.uid, email, twoFactorEnabled, encryptedSecret);
                                   }
                                 }
                               } catch (e) {
-                                debugPrint('Brute force check error: $e');
-                              }
-
-                              final usersSnap = await FirebaseFirestore.instance
-                                  .collection('users')
-                                  .where('email', isEqualTo: sanitizedEmail)
-                                  .limit(1)
-                                  .get();
-
-                              bool isDuressLogin = false;
-                              if (usersSnap.docs.isNotEmpty) {
-                                final userData = usersSnap.docs.first.data();
-                                final String? encryptedDuressPassword = userData['duressPassword'] as String?;
-                                if (encryptedDuressPassword != null && encryptedDuressPassword.isNotEmpty) {
-                                  final crypto = CryptoService();
-                                  try {
-                                    final String decryptedDuress = crypto.decryptString(encryptedDuressPassword, crypto.masterAppKey);
-                                    if (decryptedDuress == password) {
-                                      isDuressLogin = true;
-                                    }
-                                  } catch (e) {
-                                    debugPrint('Duress decrypt failed: $e');
-                                  }
-                                }
-                              }
-
-                              if (isDuressLogin) {
-                                await FirebaseAuth.instance.signInAnonymously();
+                                debugPrint('Login process error: $e');
                                 if (mounted) {
-                                  setState(() => _isLoading = false);
-                                  _sendDuressAlertEmail(email);
-                                  Navigator.pushReplacement(
-                                    // ignore: use_build_context_synchronously
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                                  );
-                                }
-                                return;
-                              }
-
-                              dynamic result = await _auth.signInWithEmailAndPassword(email, password);
-
-                              if (mounted) {
-                                if (result == null) {
-                                  int attempts = 1;
-                                  if (attemptDoc != null && attemptDoc.exists) {
-                                    attempts = (attemptDoc.data()?['failedAttempts'] ?? 0) + 1;
-                                  }
-                                  int lockedUntil = 0;
-                                  String errMsg = 'Invalid email or password.';
-
-                                  if (attempts >= 5) {
-                                    lockedUntil = DateTime.now().millisecondsSinceEpoch + (30 * 60 * 1000);
-                                    errMsg = 'Account locked for 30 minutes due to 5 failed login attempts.';
-                                    _sendLockoutEmail(email);
-                                  } else if (attempts >= 3) {
-                                    errMsg = 'Warning: $attempts failed login attempts. Account will lock after 5 fails.';
-                                  }
-
-                                  await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).set({
-                                    'failedAttempts': attempts,
-                                    'lockedUntil': lockedUntil,
-                                  }, SetOptions(merge: true));
-
                                   setState(() {
-                                    error = errMsg;
+                                    error = 'An unexpected error occurred during login. ($e)';
                                     _isLoading = false;
                                   });
-                                } else {
-                                  await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).set({
-                                    'failedAttempts': 0,
-                                    'lockedUntil': 0,
-                                  }, SetOptions(merge: true));
-
-                                  setState(() => _isLoading = false);
-                                  _sendLoginAlertEmail(email);
-
-                                  final doc = await FirebaseFirestore.instance.collection('users').doc(result.uid).get();
-                                  final data = doc.data();
-                                  final bool twoFactorEnabled = data?['twoFactorEnabled'] ?? false;
-                                  final String? encryptedSecret = data?['totpSecret'] as String?;
-
-                                  await _handlePostLogin(result.uid, email, twoFactorEnabled, encryptedSecret);
                                 }
                               }
                             }

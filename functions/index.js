@@ -5,6 +5,8 @@ const axios = require("axios");
 
 admin.initializeApp();
 
+const rateLimits = {};
+
 exports.askGemini = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== 'POST') {
@@ -15,6 +17,21 @@ exports.askGemini = functions.https.onRequest((req, res) => {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).send({ error: 'Unauthorized: Missing or invalid token' });
+      }
+
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+      const nowMs = Date.now();
+      if (!rateLimits[ip]) {
+        rateLimits[ip] = { count: 1, firstRequest: nowMs };
+      } else {
+        if (nowMs - rateLimits[ip].firstRequest > 60000) {
+          rateLimits[ip] = { count: 1, firstRequest: nowMs };
+        } else {
+          rateLimits[ip].count++;
+          if (rateLimits[ip].count > 10) {
+            return res.status(429).send({ error: 'Too Many Requests' });
+          }
+        }
       }
 
       const idToken = authHeader.split('Bearer ')[1];
@@ -75,6 +92,10 @@ exports.checkDeadMansSwitch = functions.pubsub.schedule('every 1 hours').onRun(a
     }
     
     const emergencyDurationHours = data.emergencyDurationHours || 168; // Default 7 days
+    if (emergencyDurationHours < 1 || emergencyDurationHours > 720) {
+      console.warn(`Invalid emergency duration for user ${doc.id}: ${emergencyDurationHours}. Skipping.`);
+      continue;
+    }
     const durationMs = emergencyDurationHours * 60 * 60 * 1000;
     
     let lastActiveTs = data.lastActiveTime;
