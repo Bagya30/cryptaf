@@ -73,7 +73,7 @@ class _ShareScreenState extends State<ShareScreen> {
                   return const Center(child: CircularProgressIndicator(color: _gold));
                 }
 
-                if (!snapshot.hasData || !snapshot.data!.exists) {
+                if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || !snapshot.data!.exists || snapshot.data!.data() == null) {
                   return _buildErrorCard(
                     icon: Icons.error_outline,
                     title: 'Link Invalid',
@@ -81,7 +81,7 @@ class _ShareScreenState extends State<ShareScreen> {
                   );
                 }
 
-                final data = snapshot.data!.data() as Map<String, dynamic>;
+                final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
                 final Timestamp? expiryTimestamp = data['expiryTime'] as Timestamp?;
                 final DateTime expiry = expiryTimestamp?.toDate() ?? DateTime.now().subtract(const Duration(days: 1));
 

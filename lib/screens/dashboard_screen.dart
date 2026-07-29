@@ -759,12 +759,16 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                                 SizedBox(
                                                   width: 80,
                                                   height: 80,
-                                                  child: AnimatedBuilder(
-                                                    animation: _liquidController,
-                                                    builder: (context, child) => CustomPaint(
-                                                      painter: _LiquidPainter(
-                                                        value: _liquidController.value,
-                                                        percentage: securityScore / 100,
+                                                  child: const SizedBox().animate().custom(
+                                                    duration: 1200.ms,
+                                                    curve: Curves.easeOutCubic,
+                                                    builder: (context, value, child) => AnimatedBuilder(
+                                                      animation: _liquidController,
+                                                      builder: (context, child) => CustomPaint(
+                                                        painter: _LiquidPainter(
+                                                          value: _liquidController.value,
+                                                          percentage: value * (securityScore / 100),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -772,11 +776,13 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                                 Column(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    TweenAnimationBuilder<double>(
-                                                      tween: Tween<double>(begin: 0, end: securityScore.toDouble()),
-                                                      duration: const Duration(milliseconds: 1500),
-                                                      curve: Curves.easeOut,
-                                                      builder: (context, val, child) => Text('${val.round()}', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                                                    const Text('0').animate().custom(
+                                                      duration: 1200.ms,
+                                                      curve: Curves.easeOutCubic,
+                                                      builder: (context, value, child) {
+                                                        final val = (value * securityScore).round();
+                                                        return Text('$val', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold));
+                                                      },
                                                     ),
                                                     const Text('Score', style: TextStyle(color: Colors.white54, fontSize: 10)),
                                                   ],
@@ -792,33 +798,37 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                     ),
                                   ],
                                 ),
-                              ),
+                              ).animate(delay: 0.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic).slideY(begin: 0.15, end: 0, duration: 600.ms, curve: Curves.easeOutCubic),
                               const SizedBox(height: 24),
 
                               // 2. Stats Row (3 stat cards)
                               Row(
                                 children: [
                                   Expanded(
-                                    child: TweenAnimationBuilder<double>(
-                                      tween: Tween<double>(begin: 0, end: totalFiles.toDouble()),
-                                      duration: const Duration(milliseconds: 1500),
+                                    child: const SizedBox().animate().custom(
+                                      duration: 1000.ms,
                                       curve: Curves.easeOut,
-                                      builder: (context, val, child) => _StatCard(title: 'Total Files', value: '${val.round()}', icon: Icons.folder_open, color: const Color(0xFF06B6D4), floatAnim: _floatFolderAnim),
+                                      builder: (context, value, child) {
+                                        final count = (value * totalFiles).round();
+                                        return _StatCard(title: 'Total Files', value: '$count', icon: Icons.folder_open, color: const Color(0xFF06B6D4), floatAnim: _floatFolderAnim);
+                                      },
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                    child: TweenAnimationBuilder<double>(
-                                      tween: Tween<double>(begin: 0, end: totalNominees.toDouble()),
-                                      duration: const Duration(milliseconds: 1500),
+                                    child: const SizedBox().animate().custom(
+                                      duration: 1000.ms,
                                       curve: Curves.easeOut,
-                                      builder: (context, val, child) => _StatCard(title: 'Nominees', value: '${val.round()}', icon: Icons.people_outline, color: const Color(0xFFa855f7), floatAnim: _floatPeopleAnim),
+                                      builder: (context, value, child) {
+                                        final count = (value * totalNominees).round();
+                                        return _StatCard(title: 'Nominees', value: '$count', icon: Icons.people_outline, color: const Color(0xFFa855f7), floatAnim: _floatPeopleAnim);
+                                      },
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(child: _StatCard(title: 'Storage', value: '${(totalBytes / (1024 * 1024)).toStringAsFixed(1)} MB', icon: Icons.cloud_outlined, color: const Color(0xFF22c55e), floatAnim: _floatStorageAnim)),
                                 ],
-                              ),
+                              ).animate(delay: 100.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic).slideY(begin: 0.15, end: 0, duration: 600.ms, curve: Curves.easeOutCubic),
                               const SizedBox(height: 28),
 
                               // Storage Status Card
@@ -906,73 +916,78 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                       ),
                                       const SizedBox(height: 24),
                                     ],
-                                  );
+                                  ).animate(delay: 200.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic).slideY(begin: 0.15, end: 0, duration: 600.ms, curve: Curves.easeOutCubic);
                                 },
                               ),
 
                               // 3. Quick Actions (4 buttons in a row)
-                              const Text('Quick Actions', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 14),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    _QuickActionButton(
-                                      label: 'Upload',
-                                      icon: Icons.upload_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FileUploadScreen())),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Quick Actions', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 14),
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        _QuickActionButton(
+                                          label: 'Upload',
+                                          icon: Icons.upload_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FileUploadScreen())),
+                                        ).animate(delay: 0.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Scan',
+                                          icon: Icons.document_scanner_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanScreen())),
+                                        ).animate(delay: 80.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Notes',
+                                          icon: Icons.note_alt_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SecureNotesScreen())),
+                                        ).animate(delay: 160.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Expiry',
+                                          icon: Icons.timer_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentExpiryScreen())),
+                                        ).animate(delay: 240.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Health',
+                                          icon: Icons.health_and_safety_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaultHealthScreen())),
+                                        ).animate(delay: 320.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Share',
+                                          icon: Icons.share_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaultViewScreen())),
+                                        ).animate(delay: 400.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Trash',
+                                          icon: Icons.delete_outline,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashScreen())),
+                                        ).animate(delay: 480.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Will',
+                                          icon: Icons.history_edu_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DigitalWillScreen())),
+                                        ).animate(delay: 560.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Assistant',
+                                          icon: Icons.psychology_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AssistantScreen())),
+                                        ).animate(delay: 640.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                      ],
                                     ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Scan',
-                                      icon: Icons.document_scanner_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanScreen())),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Notes',
-                                      icon: Icons.note_alt_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SecureNotesScreen())),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Expiry',
-                                      icon: Icons.timer_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentExpiryScreen())),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Health',
-                                      icon: Icons.health_and_safety_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaultHealthScreen())),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Share',
-                                      icon: Icons.share_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaultViewScreen())),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Trash',
-                                      icon: Icons.delete_outline,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashScreen())),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Will',
-                                      icon: Icons.history_edu_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DigitalWillScreen())),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _QuickActionButton(
-                                      label: 'Assistant',
-                                      icon: Icons.psychology_outlined,
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AssistantScreen())),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                ],
+                              ).animate(delay: 300.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic).slideY(begin: 0.15, end: 0, duration: 600.ms, curve: Curves.easeOutCubic),
                               const SizedBox(height: 28),
 
                               // 4. Recent Files (Horizontal scrollable list)

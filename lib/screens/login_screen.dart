@@ -394,26 +394,30 @@ class LoginScreenState extends State<LoginScreen> {
                       Icons.lock_outline,
                       size: 48,
                       color: Color(0xFFC9A84C),
-                    ),
+                    ).animate().scale(duration: 800.ms, curve: Curves.elasticOut),
                   ],
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Cryptaf',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Welcome back to your secure vault',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white54, fontSize: 16),
-                ),
+                const Column(
+                  children: [
+                    Text(
+                      'Cryptaf',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Welcome back to your secure vault',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white54, fontSize: 16),
+                    ),
+                  ],
+                ).animate(delay: 200.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic),
                 const SizedBox(height: 40),
                 GlassContainer(
                   child: Form(
@@ -622,7 +626,7 @@ class LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                ),
+                ).animate(delay: 400.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic).slideY(begin: 0.2, end: 0, duration: 600.ms, curve: Curves.easeOutCubic),
                 if (error.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Text(
@@ -649,7 +653,7 @@ class LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                   ],
-                ),
+                ).animate(delay: 600.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic),
               ],
             ),
           ),

@@ -1,3 +1,6 @@
+// Web URL stub for non-web platforms
+library web_url_stub;
+
 class Location {
   String get href => '';
 }

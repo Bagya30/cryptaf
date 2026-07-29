@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -260,7 +261,7 @@ class FirestoreService {
     if (currentUserId == null) return null;
     
     // Generate 6-digit OTP
-    final otp = (100000 + (DateTime.now().millisecondsSinceEpoch % 900000)).toInt().toString();
+    final otp = (100000 + Random.secure().nextInt(900000)).toString();
     
     await _db.collection('users').doc(currentUserId).collection('nominee_otps').doc(email).set({
       'otp': otp,

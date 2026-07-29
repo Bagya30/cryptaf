@@ -324,7 +324,7 @@ class _SecureNotesScreenState extends State<SecureNotesScreen> {
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.note_alt_outlined, color: _gold, size: 28),
                       title: Text(
-                        decTitle,
+                        isRevealed ? decTitle : '••••••••••••',
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       subtitle: Padding(

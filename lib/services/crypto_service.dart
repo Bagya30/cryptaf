@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as enc;
@@ -61,7 +62,7 @@ class CryptoService {
 
   // generateSessionId() - random secure session ID like "XF-992"
   String generateSessionId() {
-    final num = (100 + DateTime.now().millisecondsSinceEpoch % 900).toInt();
+    final num = 100 + Random.secure().nextInt(900);
     return 'XF-$num';
   }
 
@@ -72,7 +73,13 @@ class CryptoService {
   }
 
   // Master key for internal app-level encryption (e.g. TOTP secrets)
-  String get masterAppKey => enc.Key.fromUtf8(dotenv.env['MASTER_APP_KEY'] ?? 'CryptafMasterKey32BytesLong12345').base64;
+  String get masterAppKey {
+    final key = dotenv.env['MASTER_APP_KEY'] ?? '';
+    if (key.isEmpty) {
+      throw Exception('MASTER_APP_KEY environment variable is missing or empty.');
+    }
+    return enc.Key.fromUtf8(key).base64;
+  }
 
   String encryptString(String text, String key) {
     final res = encryptFile(utf8.encode(text), key);

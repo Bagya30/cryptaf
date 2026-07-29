@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cryptaf/main.dart'; // To access AuthenticationWrapper
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cryptaf/screens/biometric_screen.dart';
 import 'package:cryptaf/screens/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -34,13 +32,17 @@ class _SplashScreenState extends State<SplashScreen> {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (context) => const OnboardingScreen()),
             );
-            return;
+          } else if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
+            );
           }
-        } catch (_) {}
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
-          );
+        } catch (e) {
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
+            );
+          }
         }
       }
     });
@@ -52,17 +54,12 @@ class _SplashScreenState extends State<SplashScreen> {
         final prefs = await SharedPreferences.getInstance();
         if (!mounted || _navigated) return;
         final onboardingDone = prefs.getBool('onboarding_done') ?? false;
-        final setupDone = prefs.getBool('biometric_setup_done') ?? false;
 
         if (mounted && !_navigated) {
           _navigated = true;
           if (!onboardingDone) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-            );
-          } else if (!kIsWeb && !setupDone) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const BiometricScreen()),
             );
           } else {
             Navigator.of(context).pushReplacement(

@@ -35,6 +35,8 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
   void dispose() {
     _clipboardTimer?.cancel();
     _vaultPassCtrl.dispose();
+    _decryptedPasswordsCache.clear();
+    _revealedPasswords.clear();
     super.dispose();
   }
 

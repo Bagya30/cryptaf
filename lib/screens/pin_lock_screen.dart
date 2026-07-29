@@ -105,21 +105,35 @@ class PinLockScreenState extends State<PinLockScreen> {
         }
       }
       if (savedPin == null || savedPin!.isEmpty) {
-        savedPin = '1234';
+        savedPin = '';
         hasCustomPin = false;
       }
       if (mounted) {
         setState(() {});
+        if (!hasCustomPin) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No PIN set. Please set a PIN in Security Settings.')),
+          );
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
-      savedPin = '1234';
+      savedPin = '';
       hasCustomPin = false;
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        if (!hasCustomPin) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No PIN set. Please set a PIN in Security Settings.')),
+          );
+          Navigator.pop(context);
+        }
+      }
     }
   }
 
   Future<void> _verifyPin() async {
-    if (enteredPin.length != 4 || isChecking || lockoutEndTime != null) return;
+    if (enteredPin.length != 4 || isChecking || lockoutEndTime != null || !hasCustomPin) return;
     setState(() {
       isChecking = true;
       hasError = false;
@@ -159,7 +173,7 @@ class PinLockScreenState extends State<PinLockScreen> {
   }
 
   void _onDigitTap(String digit) {
-    if (lockoutEndTime != null) return;
+    if (lockoutEndTime != null || !hasCustomPin) return;
     if (enteredPin.length < 4 && !isChecking) {
       setState(() {
         enteredPin += digit;
@@ -172,7 +186,7 @@ class PinLockScreenState extends State<PinLockScreen> {
   }
 
   void _onBackspaceTap() {
-    if (lockoutEndTime != null) return;
+    if (lockoutEndTime != null || !hasCustomPin) return;
     if (enteredPin.isNotEmpty && !isChecking) {
       setState(() {
         enteredPin = enteredPin.substring(0, enteredPin.length - 1);
@@ -202,7 +216,7 @@ class PinLockScreenState extends State<PinLockScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  hasCustomPin ? 'Enter your 4-digit security PIN' : 'No PIN set. Default PIN is 1234',
+                  hasCustomPin ? 'Enter your 4-digit security PIN' : 'No PIN set. Please set a PIN in Security Settings.',
                   style: const TextStyle(color: Colors.white54, fontSize: 14),
                 ),
                 const SizedBox(height: 48),

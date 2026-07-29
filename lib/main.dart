@@ -1,3 +1,4 @@
+import 'package:cryptaf/screens/emergency_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,14 +23,18 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint("Failed to load .env file: $e");
+  } catch (_) {
+    try {
+      await dotenv.load(fileName: "assets/.env");
+    } catch (e) {
+      debugPrint("Failed to load .env file: $e");
+    }
   }
   try {
     if (kIsWeb) {
       await Firebase.initializeApp(
         options: const FirebaseOptions(
-          apiKey: 'AIzaSyC6I0ZzkEA0Q5YzPdC1p2PB3gkAfVPfE04',
+          apiKey: 'AIzaSyBmY13cGGOTJf-20YOGgB8SMONnscYzWDQ',
           authDomain: 'cryptaf-36296.firebaseapp.com',
           projectId: 'cryptaf-36296',
           storageBucket: 'cryptaf-36296.firebasestorage.app',
@@ -40,12 +45,12 @@ void main() async {
       );
     } else {
       await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: 'AIzaSyC6I0ZzkEA0Q5YzPdC1p2PB3gkAfVPfE04',
-          appId: '1:482809286288:android:86e3906f841f9e90a3d215',
-          messagingSenderId: '482809286288',
-          projectId: 'cryptaf-36296',
-          storageBucket: 'cryptaf-36296.firebasestorage.app',
+        options: FirebaseOptions(
+          apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '',
+          appId: dotenv.env['FIREBASE_APP_ID_ANDROID'] ?? '',
+          messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+          projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+          storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
         ),
       );
     }
@@ -54,10 +59,12 @@ void main() async {
   }
 
   // Initialize Firebase Performance
-  try {
-    FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
-  } catch (e) {
-    debugPrint("Firebase Performance initialization error: $e");
+  if (!kIsWeb) {
+    try {
+      FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
+    } catch (e) {
+      debugPrint("Firebase Performance initialization error: $e");
+    }
   }
 
   // Initialize Firebase Crashlytics for non-web platforms
@@ -98,11 +105,18 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
     });
     _loadTheme();
     if (kIsWeb) {
-      final url = html.window.location.href;
-      if (url.contains('/share/')) {
-        final token = url.split('/share/').last.split('?').first.split('#').first;
-        _initialRoute = '/share/$token';
-      } else if (url.contains('/nominee-access')) {
+      final currentUrl = html.window.location.href;
+      if (currentUrl.contains('/emergency/')) {
+        final rawUid = currentUrl.split('/emergency/').last.split('?').first.split('#').first.split('/').first;
+        if (rawUid.isNotEmpty) {
+          _initialRoute = '/emergency/$rawUid';
+        }
+      } else if (currentUrl.contains('/share/')) {
+        final rawToken = currentUrl.split('/share/').last.split('?').first.split('#').first.split('/').first;
+        if (rawToken.isNotEmpty) {
+          _initialRoute = '/share/$rawToken';
+        }
+      } else if (currentUrl.contains('/nominee-access')) {
         _initialRoute = '/nominee-access';
       }
     }
@@ -218,15 +232,18 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
             builder: (context) => ShareRouteWrapper(token: token),
           );
         }
+        if (path != null && path.startsWith('/emergency/')) {
+          final uid = path.replaceFirst('/emergency/', '');
+          return MaterialPageRoute(
+            builder: (context) => EmergencyProfileScreen(userId: uid),
+          );
+        }
         if (path != null && (path == '/nominee-access' || path.startsWith('/nominee-access'))) {
           return MaterialPageRoute(
             builder: (context) => const NomineePortalScreen(),
           );
         }
-        if (path == '/' || path == null) {
-          return MaterialPageRoute(builder: (context) => const SplashScreen());
-        }
-        return null;
+        return MaterialPageRoute(builder: (context) => const SplashScreen());
       },
     );
   }

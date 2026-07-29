@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
@@ -20,7 +20,13 @@ class _TrashScreenState extends State<TrashScreen> {
   void initState() {
     super.initState();
     // Silently purge files older than 30 days
-    _firestore.cleanExpiredTrash();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await _firestore.cleanExpiredTrash();
+      } catch (e) {
+        debugPrint('Trash cleanup error: $e');
+      }
+    });
   }
 
   IconData _getFileIcon(String type) {

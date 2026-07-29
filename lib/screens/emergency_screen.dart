@@ -196,7 +196,11 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                 Timestamp? lastActiveTs = data['lastActiveTime'];
                 DateTime lastActiveDate = lastActiveTs?.toDate() ?? activationDate ?? DateTime.now();
                 _lastActiveDate = lastActiveDate;
-                _startTimer(lastActiveDate, durationHours);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    _startTimer(lastActiveDate, durationHours);
+                  }
+                });
               } else {
                 _timer?.cancel();
               }

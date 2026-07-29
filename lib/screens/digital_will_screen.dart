@@ -33,6 +33,12 @@ class DigitalWillScreenState extends State<DigitalWillScreen> {
     _loadWill();
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadWill() async {
     setState(() => _isLoading = true);
     try {

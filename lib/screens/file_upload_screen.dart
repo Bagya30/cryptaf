@@ -67,7 +67,12 @@ class FileUploadScreenState extends State<FileUploadScreen> {
   }
 
   Future<void> pickFiles() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(withData: true, allowMultiple: true);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      withData: true,
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'txt', 'mp4', 'mp3', 'xlsx', 'xls', 'ppt', 'pptx', 'zip'],
+    );
 
     if (result != null) {
       setState(() {
