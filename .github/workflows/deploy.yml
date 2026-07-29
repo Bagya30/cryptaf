@@ -2,38 +2,67 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Java JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
           java-version: '17'
+          distribution: 'temurin'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.1'
           channel: 'stable'
-          cache: true
 
-      - name: Get dependencies
+      - name: Create .env file from secrets
+        run: |
+          cat > .env << EOF
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }}
+          EMAILJS_SERVICE_ID_CRYPTAF=${{ secrets.EMAILJS_SERVICE_ID_CRYPTAF }}
+          EMAILJS_TEMPLATE_ID_DEFAULT=${{ secrets.EMAILJS_TEMPLATE_ID_DEFAULT }}
+          EMAILJS_TEMPLATE_ID_ALERT=${{ secrets.EMAILJS_TEMPLATE_ID_ALERT }}
+          EMAILJS_TEMPLATE_ID_DOCUMENT_EXPIRY=${{ secrets.EMAILJS_TEMPLATE_ID_DOCUMENT_EXPIRY }}
+          EMAILJS_USER_ID=${{ secrets.EMAILJS_USER_ID }}
+          EMAILJS_USER_ID_DOCUMENT_EXPIRY=${{ secrets.EMAILJS_USER_ID_DOCUMENT_EXPIRY }}
+          FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID_WEB=${{ secrets.FIREBASE_APP_ID_WEB }}
+          FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }}
+          FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          MASTER_APP_KEY=${{ secrets.MASTER_APP_KEY }}
+          EOF
+          cp .env web/.env
+
+      - name: Install dependencies
         run: flutter pub get
 
       - name: Build Web App
-        run: flutter build web --no-tree-shake-icons
+        run: flutter build web --no-tree-shake-icons --base-href "/cryptaf/"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build/web
+          force_orphan: true
