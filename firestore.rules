@@ -1,6 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Medical emergency profile is public by design for instant QR scanning without login
     match /users/{userId}/medicalProfile/{document=**} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
@@ -18,7 +19,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     match /share_links/{linkId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
       allow write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
   }
