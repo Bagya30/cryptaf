@@ -1,0 +1,13 @@
+{
+  "users": {
+    "valid_user": {
+      "email": "user@cryptaf.app",
+      "password": "ValidSecurePassword123!"
+    },
+    "admin_user": {
+      "email": "admin@cryptaf.app",
+      "password": "AdminSecurePassword123!"
+    }
+  },
+  "emergency_uid": "DEMO_EMERGENCY_UID_12345"
+}

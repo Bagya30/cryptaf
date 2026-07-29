@@ -12,7 +12,28 @@
           "package_name": "com.cryptaf.vault"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "482809286288-anuamjo3lsgem617iih0v0e6hic6pjqe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cryptaf.vault",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "482809286288-t5oir7d9sikitnd0uriupe1erk4nij2a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cryptaf.vault",
+            "certificate_hash": "bf060b69ceb017674ba42d04062a6f1daa7e11c6"
+          }
+        },
+        {
+          "client_id": "482809286288-lb38l32b7bj69eunesvg96gkeparq6q7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBmY13cGGOTJf-20YOGgB8SMONnscYzWDQ"
@@ -20,7 +41,63 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "482809286288-lb38l32b7bj69eunesvg96gkeparq6q7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "482809286288-i3qe8v9kgt89oun6ioie92dvbh549jtu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cryptaf.vault"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482809286288:android:084354b1f04653e0a3d215",
+        "android_client_info": {
+          "package_name": "com.example.cryptaf"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "482809286288-rs15fs66d71dmoil569pncn73i9qkg3a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cryptaf",
+            "certificate_hash": "bf060b69ceb017674ba42d04062a6f1daa7e11c6"
+          }
+        },
+        {
+          "client_id": "482809286288-lb38l32b7bj69eunesvg96gkeparq6q7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmY13cGGOTJf-20YOGgB8SMONnscYzWDQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "482809286288-lb38l32b7bj69eunesvg96gkeparq6q7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "482809286288-i3qe8v9kgt89oun6ioie92dvbh549jtu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cryptaf.vault"
+              }
+            }
+          ]
         }
       }
     }

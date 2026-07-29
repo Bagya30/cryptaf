@@ -26,6 +26,7 @@ import 'package:cryptaf/screens/trash_screen.dart';
 import 'package:cryptaf/screens/document_expiry_screen.dart';
 import 'package:cryptaf/screens/vault_health_screen.dart';
 import 'package:cryptaf/screens/digital_will_screen.dart';
+import 'package:cryptaf/screens/medical_emergency_screen.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -273,7 +274,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: isActive ? active.withOpacity(0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
@@ -290,14 +291,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Icon(
               isActive ? activeIcon : icon,
               color: isActive ? active : inactive,
-              size: 24,
+              size: 22,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: isActive ? active : inactive,
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
                 letterSpacing: 0.2,
               ),
@@ -619,104 +622,65 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
 
                               // 1. Top Section (VAULT SECURED Card + Security Score ring)
                               Container(
-                                padding: const EdgeInsets.all(20),
+                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(color: const Color(0xFFC9A84C), width: 0.5),
                                   gradient: const LinearGradient(
-                                    colors: [Color(0xFF111111), Color(0xFF111111)],
+                                    colors: [Color(0xFF111111), Color(0xFF1A1A1A)],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
                                 ),
-                                child: Stack(
-                                  clipBehavior: Clip.none,
+                                child: Row(
                                   children: [
-                                    Positioned(
-                                      top: -20,
-                                      right: -20,
+                                    AnimatedBuilder(
+                                      animation: _floatLockAnim,
+                                      builder: (context, child) {
+                                        final offset = sin(_floatLockAnim.value * 2 * pi) * 4.0;
+                                        return Transform.translate(
+                                          offset: Offset(0, offset),
+                                          child: child,
+                                        );
+                                      },
                                       child: Container(
-                                        width: 100,
-                                        height: 100,
+                                        padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.12),
                                           shape: BoxShape.circle,
-                                          gradient: RadialGradient(
-                                            colors: [const Color(0xFFC9A84C).withOpacity(0.3), Colors.transparent],
-                                          ),
+                                          boxShadow: [
+                                            BoxShadow(color: const Color(0xFFC9A84C).withOpacity(0.25), blurRadius: 12),
+                                          ],
                                         ),
+                                        child: const Icon(Icons.lock_outline, color: Color(0xFFC9A84C), size: 22),
                                       ),
                                     ),
-                                    Row(
-                                      children: [
+                                    const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Row(
-                                            children: [
-                                              AnimatedBuilder(
-                                                animation: _floatLockAnim,
-                                                builder: (context, child) {
-                                                  final offset = sin(_floatLockAnim.value * 2 * pi) * 6.0;
-                                                  return Transform.translate(
-                                                    offset: Offset(0, offset),
-                                                    child: child,
-                                                  );
-                                                },
-                                                child: SizedBox(
-                                                  width: 80,
-                                                  height: 80,
-                                                  child: Stack(
-                                                    alignment: Alignment.center,
-                                                    children: [
-                                                      Container(
-                                                        padding: const EdgeInsets.all(10),
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.white.withOpacity(0.15),
-                                                          shape: BoxShape.circle,
-                                                          boxShadow: [BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 10)],
-                                                        ),
-                                                        child: const Icon(Icons.lock_outline, color: Colors.white, size: 24),
-                                                      ),
-                                                        AnimatedBuilder(
-                                                          animation: _dot1Controller,
-                                                          builder: (context, child) => Transform.translate(
-                                                            offset: Offset(cos(_dot1Controller.value * 2 * pi) * 25, sin(_dot1Controller.value * 2 * pi) * 25),
-                                                            child: Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
-                                                          ),
-                                                        ),
-                                                        AnimatedBuilder(
-                                                          animation: _dot2Controller,
-                                                          builder: (context, child) => Transform.translate(
-                                                            offset: Offset(cos(_dot2Controller.value * 2 * pi + 2 * pi / 3) * 30, sin(_dot2Controller.value * 2 * pi + 2 * pi / 3) * 30),
-                                                            child: Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
-                                                          ),
-                                                        ),
-                                                        AnimatedBuilder(
-                                                          animation: _dot3Controller,
-                                                          builder: (context, child) => Transform.translate(
-                                                            offset: Offset(cos(_dot3Controller.value * 2 * pi + 4 * pi / 3) * 22, sin(_dot3Controller.value * 2 * pi + 4 * pi / 3) * 22),
-                                                            child: Container(width: 5, height: 5, decoration: const BoxDecoration(color: Color.fromRGBO(212,168,83,0.6), shape: BoxShape.circle)),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              const SizedBox(width: 12),
-                                              const Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text('VAULT SECURED', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 1.1)),
-                                                  SizedBox(height: 2),
-                                                  Text('Last sync: 2 mins ago', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                                                ],
-                                              ),
-                                            ],
+                                          const Text(
+                                            'VAULT SECURED',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              letterSpacing: 1.0,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          const SizedBox(height: 16),
+                                          const SizedBox(height: 2),
+                                          const Text(
+                                            'Last sync: 2 mins ago',
+                                            style: TextStyle(color: Colors.white54, fontSize: 11),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFC9A84C).withOpacity(0.15),
                                               borderRadius: BorderRadius.circular(20),
@@ -726,74 +690,81 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Container(
-                                                  width: 8,
-                                                  height: 8,
+                                                  width: 6,
+                                                  height: 6,
                                                   decoration: const BoxDecoration(
                                                     color: Color(0xFFC9A84C),
                                                     shape: BoxShape.circle,
                                                   ),
-                                                ).animate(onPlay: (controller) => controller.repeat(reverse: true)).scaleXY(end: 1.5, duration: 1.seconds).fade(end: 0.5),
-                                                const SizedBox(width: 6),
-                                                const Text('SECURED', style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 1.0)),
+                                                ).animate(onPlay: (controller) => controller.repeat(reverse: true)).scaleXY(end: 1.4, duration: 1.seconds).fade(end: 0.5),
+                                                const SizedBox(width: 5),
+                                                const Text(
+                                                  'SECURED',
+                                                  style: TextStyle(
+                                                    color: Color(0xFFC9A84C),
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 10,
+                                                    letterSpacing: 0.8,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(width: 16),
+                                    const SizedBox(width: 12),
                                     Column(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         AnimatedBuilder(
                                           animation: _floatRingAnim,
                                           builder: (context, child) {
-                                            final offset = sin(_floatRingAnim.value * 2 * pi) * 6.0;
+                                            final offset = sin(_floatRingAnim.value * 2 * pi) * 4.0;
                                             return Transform.translate(
                                               offset: Offset(0, offset),
                                               child: child,
                                             );
                                           },
                                           child: Stack(
-                                              alignment: Alignment.center,
-                                              children: [
-                                                SizedBox(
-                                                  width: 80,
-                                                  height: 80,
-                                                  child: const SizedBox().animate().custom(
-                                                    duration: 1200.ms,
-                                                    curve: Curves.easeOutCubic,
-                                                    builder: (context, value, child) => AnimatedBuilder(
-                                                      animation: _liquidController,
-                                                      builder: (context, child) => CustomPaint(
-                                                        painter: _LiquidPainter(
-                                                          value: _liquidController.value,
-                                                          percentage: value * (securityScore / 100),
-                                                        ),
+                                            alignment: Alignment.center,
+                                            children: [
+                                              SizedBox(
+                                                width: 64,
+                                                height: 64,
+                                                child: const SizedBox().animate().custom(
+                                                  duration: 1200.ms,
+                                                  curve: Curves.easeOutCubic,
+                                                  builder: (context, value, child) => AnimatedBuilder(
+                                                    animation: _liquidController,
+                                                    builder: (context, child) => CustomPaint(
+                                                      painter: _LiquidPainter(
+                                                        value: _liquidController.value,
+                                                        percentage: value * (securityScore / 100),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                                Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    const Text('0').animate().custom(
-                                                      duration: 1200.ms,
-                                                      curve: Curves.easeOutCubic,
-                                                      builder: (context, value, child) {
-                                                        final val = (value * securityScore).round();
-                                                        return Text('$val', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold));
-                                                      },
-                                                    ),
-                                                    const Text('Score', style: TextStyle(color: Colors.white54, fontSize: 10)),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
+                                              ),
+                                              Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Text('0').animate().custom(
+                                                    duration: 1200.ms,
+                                                    curve: Curves.easeOutCubic,
+                                                    builder: (context, value, child) {
+                                                      final val = (value * securityScore).round();
+                                                      return Text('$val', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold));
+                                                    },
+                                                  ),
+                                                  const Text('Score', style: TextStyle(color: Colors.white54, fontSize: 9)),
+                                                ],
+                                              ),
+                                            ],
                                           ),
-                                        const SizedBox(height: 8),
-                                        const Text('Security Score', style: TextStyle(color: _gold, fontSize: 12, fontWeight: FontWeight.bold)),
-                                      ],
-                                    ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        const Text('Security Score', style: TextStyle(color: _gold, fontSize: 10, fontWeight: FontWeight.bold)),
                                       ],
                                     ),
                                   ],
@@ -983,6 +954,12 @@ class _VaultTabState extends State<_VaultTab> with TickerProviderStateMixin {
                                           icon: Icons.psychology_outlined,
                                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AssistantScreen())),
                                         ).animate(delay: 640.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
+                                        const SizedBox(width: 16),
+                                        _QuickActionButton(
+                                          label: 'Medical QR',
+                                          icon: Icons.medical_services_outlined,
+                                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicalEmergencyScreen())),
+                                        ).animate(delay: 720.ms).fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
                                       ],
                                     ),
                                   ),
@@ -1411,7 +1388,7 @@ class _StatCard extends StatelessWidget {
     }
 
     return GlassContainer(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1419,15 +1396,33 @@ class _StatCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
                 child: iconWidget,
               ),
-              Text(title, style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w500)),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );

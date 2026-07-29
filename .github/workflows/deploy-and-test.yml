@@ -1,0 +1,138 @@
+name: Complete CI/CD Deployment & Live GitHub Pages E2E Testing
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+env:
+  BASE_URL: "https://bagya30.github.io/cryptaf/"
+  HEADLESS: "true"
+
+jobs:
+  build-deploy-and-test:
+    name: Build, Deploy & Live Selenium E2E Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      # Stage 1: Repository Checkout
+      - name: Stage 1 - Repository Checkout
+        uses: actions/checkout@v4
+
+      # Stage 2: Dependency Installation & Java/Flutter Setup
+      - name: Stage 2 - Set up Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Stage 2 - Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.1'
+          channel: 'stable'
+          cache: true
+
+      - name: Create .env file from secrets
+        run: |
+          cat > .env << EOF
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }}
+          EMAILJS_SERVICE_ID_CRYPTAF=${{ secrets.EMAILJS_SERVICE_ID_CRYPTAF }}
+          EMAILJS_TEMPLATE_ID_DEFAULT=${{ secrets.EMAILJS_TEMPLATE_ID_DEFAULT }}
+          EMAILJS_TEMPLATE_ID_ALERT=${{ secrets.EMAILJS_TEMPLATE_ID_ALERT }}
+          EMAILJS_TEMPLATE_ID_DOCUMENT_EXPIRY=${{ secrets.EMAILJS_TEMPLATE_ID_DOCUMENT_EXPIRY }}
+          EMAILJS_USER_ID=${{ secrets.EMAILJS_USER_ID }}
+          EMAILJS_USER_ID_DOCUMENT_EXPIRY=${{ secrets.EMAILJS_USER_ID_DOCUMENT_EXPIRY }}
+          FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID_WEB=${{ secrets.FIREBASE_APP_ID_WEB }}
+          FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }}
+          FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          MASTER_APP_KEY=${{ secrets.MASTER_APP_KEY }}
+          EOF
+          cp .env web/.env
+
+      - name: Stage 2 - Install Flutter Dependencies
+        run: flutter pub get
+
+      # Stage 3: Build Application for GitHub Pages
+      - name: Stage 3 - Build Flutter Web App
+        run: flutter build web --no-tree-shake-icons --base-href "/cryptaf/"
+
+      # Stage 4: Static Analysis
+      - name: Stage 4 - Static Analysis
+        run: flutter analyze
+
+      # Stage 5: Deploy to GitHub Pages
+      - name: Stage 5 - Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          force_orphan: true
+
+      # Stage 6: Wait for Deployment Propagation
+      - name: Stage 6 - Wait for Live Deployment Propagation
+        run: |
+          echo "Waiting 30 seconds for GitHub Pages CDN propagation..."
+          sleep 30
+
+      # Stage 7: Deployment Verification
+      - name: Stage 7 - Deployment Verification (HTTP 200 Check)
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL")
+          echo "Deployment Verification Status for $BASE_URL: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ne 200 ] && [ "$HTTP_STATUS" -ne 304 ]; then
+            echo "::error::Deployment Verification Failed with HTTP Status $HTTP_STATUS"
+            exit 1
+          fi
+
+      # Stage 8: Set up Python & Selenium Dependencies
+      - name: Stage 8 - Set up Python & Selenium Automation Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Selenium & OpenPyXL Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl requests
+
+      # Stage 8 & 9 & 10: Run Selenium E2E Tests & Generate Reports
+      - name: Stage 8-10 - Execute 400+ Selenium E2E Tests & Generate Reports
+        run: |
+          python build_selenium_framework_step2.py
+
+      # Stage 11: Upload Artifacts (30 Days Retention)
+      - name: Stage 11 - Upload Automation Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-e2e-selenium-reports
+          retention-days: 30
+          path: |
+            Test Results/Excel/
+            Test Results/HTML/
+            Test Results/JSON/
+            Test Results/Summary/
+            Test Results/Screenshots/
+            Test Results/Logs/
+
+      # Stage 12 & 13: Publish Summary & Store Historical Results
+      - name: Stage 12-13 - Publish GitHub Step Summary & Store Historical Evidence
+        if: always()
+        run: |
+          cat "Test Results/Summary/summary.md" >> $GITHUB_STEP_SUMMARY
