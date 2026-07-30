@@ -176,8 +176,8 @@ class ScanScreenState extends State<ScanScreen> {
                         final key = crypto.deriveKey(passwordController.text, salt);
                         final encResult = crypto.encryptFile(_capturedBytes!, key, ivBase64: null);
 
-                        final String fileName = 'Scan_${DateTime.now().millisecondsSinceEpoch}.jpg';
-                        final url = await CloudinaryService().uploadFile(fileName, encResult.encryptedBytes);
+                        final String fileName = 'Scan_${DateTime.now().millisecondsSinceEpoch}.jpg.enc';
+                        final url = await CloudinaryService().uploadFile(fileName, encResult.encryptedBytes, resourceType: 'raw');
 
                         if (url != null) {
                           await FirestoreService().uploadFileRecord(

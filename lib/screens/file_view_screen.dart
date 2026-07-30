@@ -105,7 +105,13 @@ class FileViewScreenState extends State<FileViewScreen> {
 
     try {
       // 1. Fetch encrypted file bytes from Cloudinary
-      final response = await http.get(Uri.parse(widget.downloadUrl));
+      final response = await http.get(
+        Uri.parse(widget.downloadUrl),
+        headers: {
+          'Accept': '*/*',
+          'Access-Control-Allow-Origin': '*',
+        },
+      );
       if (response.statusCode != 200) {
         throw Exception('Failed to download encrypted file from storage');
       }
@@ -113,11 +119,16 @@ class FileViewScreenState extends State<FileViewScreen> {
       final Uint8List encryptedBytes = response.bodyBytes;
 
       // 2. Derive key using PBKDF2
-      final salt = widget.salt ?? 'DefaultCryptafSalt123!@#';
+      final salt = (widget.salt != null && widget.salt!.isNotEmpty) 
+          ? widget.salt! 
+          : 'DefaultCryptafSalt123!@#';
+      final iv = (widget.iv != null && widget.iv!.isNotEmpty) 
+          ? widget.iv! 
+          : null;
       final key = _crypto.deriveKey(_passwordController.text, salt);
 
       // 3. Decrypt client-side
-      final Uint8List decryptedBytes = _crypto.decryptFile(encryptedBytes, key, ivBase64: widget.iv);
+      final Uint8List decryptedBytes = _crypto.decryptFile(encryptedBytes, key, ivBase64: iv);
 
       setState(() {
         _decryptedBytes = decryptedBytes;

@@ -150,16 +150,31 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                     final isValid = _totp.verifyTOTP(secret, codeController.text);
 
                     if (isValid) {
-                      final encryptedSecret = _crypto.encryptString(secret, _crypto.masterAppKey);
-                      await _firestore.updateSecuritySettings(true, currentBiometrics, totpSecret: encryptedSecret);
-                      if (mounted) {
-                        // ignore: use_build_context_synchronously
-                        Navigator.pop(context);
-                        if (!mounted) return;
-                        // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('2FA Enabled successfully!'), backgroundColor: Colors.greenAccent),
-                        );
+                      try {
+                        final encryptedSecret = _crypto.encryptString(secret, _crypto.masterAppKey);
+                        await _firestore.updateSecuritySettings(true, currentBiometrics, totpSecret: encryptedSecret);
+                        if (mounted) {
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+                          if (!mounted) return;
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('2FA Enabled successfully!'), backgroundColor: Colors.greenAccent),
+                          );
+                        }
+                      } catch (e) {
+                        debugPrint('2FA setup error: $e');
+                        setDialogState(() {
+                          isVerifying = false;
+                        });
+                        if (mounted) {
+                          if (!mounted) return;
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('2FA setup failed. Please try again.'), backgroundColor: Colors.redAccent),
+                          );
+                        }
+                        return;
                       }
                     } else {
                       setDialogState(() {
@@ -1065,7 +1080,16 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
           if (snapshot.hasData && snapshot.data!.exists) {
             var data = snapshot.data!.data() as Map<String, dynamic>?;
             if (data != null) {
-              twoFactorEnabled = data['twoFactorEnabled'] ?? false;
+              final newTwoFactor = data['twoFactorEnabled'] ?? false;
+              if (twoFactorEnabled != newTwoFactor) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    setState(() {
+                      twoFactorEnabled = newTwoFactor;
+                    });
+                  }
+                });
+              }
               if (kIsWeb) {
                 biometricsEnabled = false;
               } else {
@@ -1124,6 +1148,11 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                               _show2FASetupDialog(context, biometricsEnabled);
                             } else {
                               _firestore.updateSecuritySettings(false, biometricsEnabled, totpSecret: null);
+                              if (mounted) {
+                                setState(() {
+                                  twoFactorEnabled = false;
+                                });
+                              }
                             }
                           },
                         ),
