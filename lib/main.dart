@@ -1,5 +1,6 @@
 import 'package:cryptaf/screens/emergency_profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cryptaf/screens/login_screen.dart';
@@ -21,6 +22,7 @@ import 'package:cryptaf/web_url_stub.dart' if (dart.library.html) 'dart:html' as
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SemanticsBinding.instance.ensureSemantics();
   try {
     await dotenv.load(fileName: ".env");
   } catch (_) {
@@ -219,6 +221,7 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
     return MaterialApp(
       title: 'Cryptaf',
       debugShowCheckedModeBanner: false,
+      showSemanticsDebugger: false,
       initialRoute: _initialRoute,
       themeMode: _themeMode,
       theme: lightTheme,

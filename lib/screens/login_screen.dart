@@ -424,25 +424,31 @@ class LoginScreenState extends State<LoginScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        TextFormField(
-                          style: const TextStyle(color: Colors.white),
-                          decoration: _inputDecoration('Email Address', Icons.email_outlined),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (val) {
-                            if (val == null || val.isEmpty) return 'Enter an email';
-                            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                            if (!emailRegex.hasMatch(val)) return 'Enter a valid email';
-                            return null;
-                          },
-                          onChanged: (val) => setState(() => email = val),
+                        Semantics(
+                          label: 'Email Address',
+                          child: TextFormField(
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _inputDecoration('Email Address', Icons.email_outlined),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) return 'Enter an email';
+                              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                              if (!emailRegex.hasMatch(val)) return 'Enter a valid email';
+                              return null;
+                            },
+                            onChanged: (val) => setState(() => email = val),
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          style: const TextStyle(color: Colors.white),
-                          decoration: _inputDecoration('Password', Icons.lock_outline),
-                          obscureText: true,
-                          validator: (val) => val!.length < 6 ? 'Password must be 6+ characters' : null,
-                          onChanged: (val) => setState(() => password = val),
+                        Semantics(
+                          label: 'Password',
+                          child: TextFormField(
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _inputDecoration('Password', Icons.lock_outline),
+                            obscureText: true,
+                            validator: (val) => val!.length < 6 ? 'Password must be 6+ characters' : null,
+                            onChanged: (val) => setState(() => password = val),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Align(
@@ -456,8 +462,11 @@ class LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        GradientButton(
-                          text: 'Log In',
+                        Semantics(
+                          label: 'Log In',
+                          button: true,
+                          child: GradientButton(
+                            text: 'Log In',
                           isLoading: _isLoading,
                           onPressed: () async {
                             if (_formKey.currentState!.validate()) {
@@ -595,7 +604,8 @@ class LoginScreenState extends State<LoginScreen> {
                             }
                           },
                         ),
-                        const SizedBox(height: 16),
+                      ),
+                      const SizedBox(height: 16),
                         const Row(
                           children: [
                             Expanded(child: Divider(color: Colors.white12)),

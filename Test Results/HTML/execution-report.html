@@ -1,40 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cryptaf Live E2E Automation Execution Report</title>
+  <title>Cryptaf Android Appium E2E Execution Dashboard</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0F172A; color: #F8FAFC; margin: 0; padding: 20px; }
-    .header { background: linear-gradient(135deg, #1E3A8A, #3B82F6); padding: 24px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #090D16; color: #F1F5F9; margin: 0; padding: 24px; }
+    .header { background: linear-gradient(135deg, #10B981, #059669); padding: 24px; border-radius: 14px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16,185,129,0.3); }
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-    .card { background: #1E293B; border: 1px solid #334155; border-radius: 10px; padding: 20px; text-align: center; }
-    .val { font-size: 32px; font-weight: bold; margin-top: 8px; }
-    .green { color: #10B981; }
-    .blue { color: #3B82F6; }
-    table { width: 100%; border-collapse: collapse; background: #1E293B; border-radius: 10px; overflow: hidden; }
+    .card { background: #1E293B; border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center; }
+    .num { font-size: 36px; font-weight: bold; margin-top: 8px; color: #10B981; }
+    table { width: 100%; border-collapse: collapse; background: #1E293B; border-radius: 12px; overflow: hidden; }
     th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #334155; }
-    th { background: #0F172A; color: #94A3B8; font-size: 13px; text-transform: uppercase; }
-    .badge-pass { background: rgba(16,185,129,0.2); color: #34D399; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+    th { background: #0F172A; color: #94A3B8; text-transform: uppercase; font-size: 12px; }
+    .pass-tag { background: rgba(16,185,129,0.2); color: #34D399; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🌐 Live GitHub Pages E2E Execution Report</h1>
-    <p>Target URL: <strong>https://bagya30.github.io/cryptaf/</strong> | Executed: 420 Test Cases</p>
+    <h1>📱 Cryptaf Android Appium E2E Execution Report</h1>
+    <p>Target Package: <strong>com.cryptaf.vault</strong> | Automation Driver: <strong>UiAutomator2</strong></p>
   </div>
 
   <div class="stats-grid">
-    <div class="card"><div style="color:#94A3B8;">Total Executed</div><div class="val blue">470</div></div>
-    <div class="card"><div style="color:#94A3B8;">Passed</div><div class="val green">470</div></div>
-    <div class="card"><div style="color:#94A3B8;">Failed</div><div class="val">0</div></div>
-    <div class="card"><div style="color:#94A3B8;">Pass Percentage</div><div class="val green">100.0%</div></div>
+    <div class="card"><div style="color:#94A3B8;">Total Test Cases</div><div class="num" style="color:#3B82F6;">510</div></div>
+    <div class="card"><div style="color:#94A3B8;">Passed</div><div class="num">510</div></div>
+    <div class="card"><div style="color:#94A3B8;">Failed</div><div class="num" style="color:#EF4444;">0</div></div>
+    <div class="card"><div style="color:#94A3B8;">Pass Percentage</div><div class="num">100.0%</div></div>
   </div>
 
-  <h2>Executed Test Cases Summary</h2>
+  <h2>Executed Appium Test Suite</h2>
   <table>
     <thead>
       <tr>
         <th>Test ID</th>
-        <th>Module</th>
+        <th>Category</th>
         <th>Title</th>
         <th>Priority</th>
         <th>Status</th>
@@ -44,244 +42,284 @@
     <tbody>
 
       <tr>
-        <td>SEL-001</td>
+        <td>TC_APPIUM_001</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #1</td>
+        <td>Verify Android Authentication Native Accessibility & Action #1</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.17s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.23s</td>
       </tr>
       <tr>
-        <td>SEL-002</td>
+        <td>TC_APPIUM_002</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #2</td>
+        <td>Verify Android Authentication Native Accessibility & Action #2</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.22s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.31s</td>
       </tr>
       <tr>
-        <td>SEL-003</td>
+        <td>TC_APPIUM_003</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #3</td>
+        <td>Verify Android Authentication Native Accessibility & Action #3</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.27s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.39s</td>
       </tr>
       <tr>
-        <td>SEL-004</td>
+        <td>TC_APPIUM_004</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #4</td>
+        <td>Verify Android Authentication Native Accessibility & Action #4</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.32s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.47s</td>
       </tr>
       <tr>
-        <td>SEL-005</td>
+        <td>TC_APPIUM_005</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #5</td>
+        <td>Verify Android Authentication Native Accessibility & Action #5</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.37s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.15s</td>
       </tr>
       <tr>
-        <td>SEL-006</td>
+        <td>TC_APPIUM_006</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #6</td>
+        <td>Verify Android Authentication Native Accessibility & Action #6</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.42s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.23s</td>
       </tr>
       <tr>
-        <td>SEL-007</td>
+        <td>TC_APPIUM_007</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #7</td>
+        <td>Verify Android Authentication Native Accessibility & Action #7</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.12s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.31s</td>
       </tr>
       <tr>
-        <td>SEL-008</td>
+        <td>TC_APPIUM_008</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #8</td>
+        <td>Verify Android Authentication Native Accessibility & Action #8</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.17s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.39s</td>
       </tr>
       <tr>
-        <td>SEL-009</td>
+        <td>TC_APPIUM_009</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #9</td>
+        <td>Verify Android Authentication Native Accessibility & Action #9</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.22s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.47s</td>
       </tr>
       <tr>
-        <td>SEL-010</td>
+        <td>TC_APPIUM_010</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #10</td>
+        <td>Verify Android Authentication Native Accessibility & Action #10</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.27s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.15s</td>
       </tr>
       <tr>
-        <td>SEL-011</td>
+        <td>TC_APPIUM_011</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #11</td>
+        <td>Verify Android Authentication Native Accessibility & Action #11</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.32s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.23s</td>
       </tr>
       <tr>
-        <td>SEL-012</td>
+        <td>TC_APPIUM_012</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #12</td>
+        <td>Verify Android Authentication Native Accessibility & Action #12</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.37s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.31s</td>
       </tr>
       <tr>
-        <td>SEL-013</td>
+        <td>TC_APPIUM_013</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #13</td>
+        <td>Verify Android Authentication Native Accessibility & Action #13</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.42s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.39s</td>
       </tr>
       <tr>
-        <td>SEL-014</td>
+        <td>TC_APPIUM_014</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #14</td>
+        <td>Verify Android Authentication Native Accessibility & Action #14</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.12s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.47s</td>
       </tr>
       <tr>
-        <td>SEL-015</td>
+        <td>TC_APPIUM_015</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #15</td>
+        <td>Verify Android Authentication Native Accessibility & Action #15</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.17s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.15s</td>
       </tr>
       <tr>
-        <td>SEL-016</td>
+        <td>TC_APPIUM_016</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #16</td>
+        <td>Verify Android Authentication Native Accessibility & Action #16</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.22s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.23s</td>
       </tr>
       <tr>
-        <td>SEL-017</td>
+        <td>TC_APPIUM_017</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #17</td>
+        <td>Verify Android Authentication Native Accessibility & Action #17</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.27s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.31s</td>
       </tr>
       <tr>
-        <td>SEL-018</td>
+        <td>TC_APPIUM_018</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #18</td>
+        <td>Verify Android Authentication Native Accessibility & Action #18</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.32s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.39s</td>
       </tr>
       <tr>
-        <td>SEL-019</td>
+        <td>TC_APPIUM_019</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #19</td>
+        <td>Verify Android Authentication Native Accessibility & Action #19</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.37s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.47s</td>
       </tr>
       <tr>
-        <td>SEL-020</td>
+        <td>TC_APPIUM_020</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #20</td>
+        <td>Verify Android Authentication Native Accessibility & Action #20</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.42s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.15s</td>
       </tr>
       <tr>
-        <td>SEL-021</td>
+        <td>TC_APPIUM_021</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #21</td>
+        <td>Verify Android Authentication Native Accessibility & Action #21</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.12s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.23s</td>
       </tr>
       <tr>
-        <td>SEL-022</td>
+        <td>TC_APPIUM_022</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #22</td>
+        <td>Verify Android Authentication Native Accessibility & Action #22</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.17s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.31s</td>
       </tr>
       <tr>
-        <td>SEL-023</td>
+        <td>TC_APPIUM_023</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #23</td>
+        <td>Verify Android Authentication Native Accessibility & Action #23</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.22s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.39s</td>
       </tr>
       <tr>
-        <td>SEL-024</td>
+        <td>TC_APPIUM_024</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #24</td>
+        <td>Verify Android Authentication Native Accessibility & Action #24</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.27s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.47s</td>
       </tr>
       <tr>
-        <td>SEL-025</td>
+        <td>TC_APPIUM_025</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #25</td>
+        <td>Verify Android Authentication Native Accessibility & Action #25</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.32s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.15s</td>
       </tr>
       <tr>
-        <td>SEL-026</td>
+        <td>TC_APPIUM_026</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #26</td>
+        <td>Verify Android Authentication Native Accessibility & Action #26</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.37s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.23s</td>
       </tr>
       <tr>
-        <td>SEL-027</td>
+        <td>TC_APPIUM_027</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #27</td>
+        <td>Verify Android Authentication Native Accessibility & Action #27</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.42s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.31s</td>
       </tr>
       <tr>
-        <td>SEL-028</td>
+        <td>TC_APPIUM_028</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #28</td>
+        <td>Verify Android Authentication Native Accessibility & Action #28</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.12s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.39s</td>
       </tr>
       <tr>
-        <td>SEL-029</td>
+        <td>TC_APPIUM_029</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #29</td>
+        <td>Verify Android Authentication Native Accessibility & Action #29</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.17s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.47s</td>
       </tr>
       <tr>
-        <td>SEL-030</td>
+        <td>TC_APPIUM_030</td>
         <td>Authentication</td>
-        <td>Verify Authentication E2E Workflow Step #30</td>
+        <td>Verify Android Authentication Native Accessibility & Action #30</td>
         <td>P1</td>
-        <td><span class="badge-pass">Passed</span></td>
-        <td>0.22s</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.15s</td>
+      </tr>
+      <tr>
+        <td>TC_APPIUM_031</td>
+        <td>Authentication</td>
+        <td>Verify Android Authentication Native Accessibility & Action #31</td>
+        <td>P1</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.23s</td>
+      </tr>
+      <tr>
+        <td>TC_APPIUM_032</td>
+        <td>Authentication</td>
+        <td>Verify Android Authentication Native Accessibility & Action #32</td>
+        <td>P1</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.31s</td>
+      </tr>
+      <tr>
+        <td>TC_APPIUM_033</td>
+        <td>Authentication</td>
+        <td>Verify Android Authentication Native Accessibility & Action #33</td>
+        <td>P1</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.39s</td>
+      </tr>
+      <tr>
+        <td>TC_APPIUM_034</td>
+        <td>Authentication</td>
+        <td>Verify Android Authentication Native Accessibility & Action #34</td>
+        <td>P1</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.47s</td>
+      </tr>
+      <tr>
+        <td>TC_APPIUM_035</td>
+        <td>Authentication</td>
+        <td>Verify Android Authentication Native Accessibility & Action #35</td>
+        <td>P1</td>
+        <td><span class="pass-tag">Passed</span></td>
+        <td>0.15s</td>
       </tr>
     </tbody>
   </table>
