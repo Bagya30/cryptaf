@@ -34,7 +34,7 @@ class CloudinaryService {
       );
     } catch (e) {
       debugPrint('Cloudinary Exception: $e');
-      return null;
+      rethrow;
     }
   }
 }

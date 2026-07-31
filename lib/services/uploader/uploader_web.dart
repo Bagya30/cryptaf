@@ -17,6 +17,7 @@ class PlatformUploader extends BaseUploader {
     final xhr = html.HttpRequest();
 
     xhr.timeout = 60000; // 60 seconds
+    xhr.withCredentials = false;
     xhr.open('POST', url);
 
     final formData = html.FormData();
@@ -35,14 +36,20 @@ class PlatformUploader extends BaseUploader {
         final jsonResponse = json.decode(xhr.responseText!);
         completer.complete(jsonResponse['secure_url']);
       } else {
-        debugPrint('Web Upload Failed: ${xhr.status} - ${xhr.responseText}');
-        completer.complete(null);
+        final errText = xhr.responseText ?? 'No response text';
+        debugPrint('Web Upload Failed: ${xhr.status} - $errText');
+        completer.completeError('HTTP ${xhr.status}: $errText');
       }
     });
 
     xhr.onError.listen((e) {
       debugPrint('Web Upload Error: $e');
-      completer.complete(null);
+      completer.completeError('Network Error during Cloudinary upload');
+    });
+
+    xhr.onTimeout.listen((e) {
+      debugPrint('Web Upload Timeout');
+      completer.completeError('Cloudinary upload timed out');
     });
 
     xhr.send(formData);

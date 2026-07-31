@@ -343,6 +343,7 @@ class VaultViewScreenState extends State<VaultViewScreen> {
                         ),
                         child: ListTile(
                           onTap: () {
+                            debugPrint('DOCUMENT TAP DATA [${doc.id}]: $data');
                             final url = downloadUrl ?? '';
                             if (url.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(

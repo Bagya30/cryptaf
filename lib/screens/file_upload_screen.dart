@@ -122,10 +122,15 @@ class FileUploadScreenState extends State<FileUploadScreen> {
 
         final String uploadResourceType = isEncrypted ? 'raw' : 'auto';
         final String uploadFileName = isEncrypted && !file.name.endsWith('.enc') ? '${file.name}.enc' : file.name;
-        String? downloadUrl = await _cloudinary.uploadFile(uploadFileName, bytesToUpload, resourceType: uploadResourceType);
+        String? downloadUrl;
+        try {
+          downloadUrl = await _cloudinary.uploadFile(uploadFileName, bytesToUpload, resourceType: uploadResourceType);
+        } catch (e) {
+          throw Exception('Cloudinary upload error (${file.name}): $e');
+        }
 
         if (downloadUrl == null || downloadUrl.isEmpty) {
-          throw Exception('Cloudinary upload failed for ${file.name}');
+          throw Exception('Cloudinary upload returned null URL for ${file.name}');
         }
 
         String fileType = file.name.split('.').last.toUpperCase();
