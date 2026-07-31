@@ -6,23 +6,16 @@ import 'uploader/uploader_mobile.dart'
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CloudinaryService {
-  static String get _cloudName {
-    final val = dotenv.env['CLOUDINARY_CLOUD_NAME'];
-    return (val != null && val.isNotEmpty) ? val : 'dbkwa74hv';
-  }
-
-  static String get _apiKey {
-    final val = dotenv.env['CLOUDINARY_API_KEY'];
-    return (val != null && val.isNotEmpty) ? val : '781795518437784';
-  }
-
-  static String get _apiSecret {
-    final val = dotenv.env['CLOUDINARY_API_SECRET'];
-    return (val != null && val.isNotEmpty) ? val : 'KnYzuXmZb85IiFK-iEoVJz4fVPM';
-  }
+  static String get _cloudName => dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
+  static String get _apiKey => dotenv.env['CLOUDINARY_API_KEY'] ?? '';
+  static String get _apiSecret => dotenv.env['CLOUDINARY_API_SECRET'] ?? '';
 
   Future<String?> uploadFile(String fileName, Uint8List fileBytes, {String resourceType = 'auto'}) async {
     try {
+      if (_cloudName.isEmpty || _apiKey.isEmpty || _apiSecret.isEmpty) {
+        throw Exception('Cloudinary credentials not loaded - .env file may be missing or failed to load');
+      }
+
       final timestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round().toString();
       
       // Generate Signature
@@ -31,7 +24,7 @@ class CloudinaryService {
       final digest = sha1.convert(bytes);
       final signature = digest.toString();
 
-      debugPrint('Cloudinary Upload Params -> url: https://api.cloudinary.com/v1_1/$_cloudName/$resourceType/upload, api_key: $_apiKey, timestamp: $timestamp');
+      debugPrint('Cloudinary Upload Params -> url: https://api.cloudinary.com/v1_1/$_cloudName/$resourceType/upload, api_key: ${_apiKey.isNotEmpty ? "*****" : "EMPTY"}, timestamp: $timestamp');
 
       final uploader = PlatformUploader();
       
