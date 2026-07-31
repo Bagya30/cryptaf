@@ -120,7 +120,13 @@ class FileUploadScreenState extends State<FileUploadScreen> {
           uploadProgress[file.name] = "Uploading...";
         });
 
-        String? downloadUrl = await _cloudinary.uploadFile(file.name, bytesToUpload);
+        final String uploadResourceType = isEncrypted ? 'raw' : 'auto';
+        final String uploadFileName = isEncrypted && !file.name.endsWith('.enc') ? '${file.name}.enc' : file.name;
+        String? downloadUrl = await _cloudinary.uploadFile(uploadFileName, bytesToUpload, resourceType: uploadResourceType);
+
+        if (downloadUrl == null || downloadUrl.isEmpty) {
+          throw Exception('Cloudinary upload failed for ${file.name}');
+        }
 
         String fileType = file.name.split('.').last.toUpperCase();
         await _firestore

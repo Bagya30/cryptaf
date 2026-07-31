@@ -319,7 +319,7 @@ class VaultViewScreenState extends State<VaultViewScreen> {
                       final String type = data['type'];
                       final String category = data['category'] ?? 'Documents';
                       final bool encrypted = data['encrypted'] ?? true;
-                      final String? downloadUrl = data['downloadUrl'] ?? data['fileUrl'] ?? data['url'];
+                      final String? downloadUrl = data['downloadUrl'] ?? data['fileUrl'] ?? data['url'] ?? data['file_url'] ?? data['link'] ?? data['cloudinaryUrl'];
                       final Timestamp? uploadedAt = data['uploadedAt'];
                       final int? sizeBytes = data['sizeBytes'] as int?;
                       final String? salt = data['salt'] as String?;
