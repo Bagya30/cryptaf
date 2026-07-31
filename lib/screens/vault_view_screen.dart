@@ -319,7 +319,7 @@ class VaultViewScreenState extends State<VaultViewScreen> {
                       final String type = data['type'];
                       final String category = data['category'] ?? 'Documents';
                       final bool encrypted = data['encrypted'] ?? true;
-                      final String? downloadUrl = data['downloadUrl'];
+                      final String? downloadUrl = data['downloadUrl'] ?? data['fileUrl'] ?? data['url'];
                       final Timestamp? uploadedAt = data['uploadedAt'];
                       final int? sizeBytes = data['sizeBytes'] as int?;
                       final String? salt = data['salt'] as String?;
@@ -342,28 +342,33 @@ class VaultViewScreenState extends State<VaultViewScreen> {
                           ],
                         ),
                         child: ListTile(
-                          onTap: downloadUrl != null
-                              ? () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => FileViewScreen(
-                                        docId: doc.id,
-                                        name: name,
-                                        type: type,
-                                        category: category,
-                                        downloadUrl: downloadUrl,
-                                        uploadedAt: uploadedAt,
-                                        sizeBytes: sizeBytes,
-                                        salt: salt,
-                                        iv: iv,
-                                        isFavorite: isFavorite,
-                                        isEncrypted: encrypted,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              : null,
+                          onTap: () {
+                            final url = downloadUrl ?? '';
+                            if (url.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('File URL not available for this document'), backgroundColor: Colors.redAccent),
+                              );
+                              return;
+                            }
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FileViewScreen(
+                                  docId: doc.id,
+                                  name: name,
+                                  type: type,
+                                  category: category,
+                                  downloadUrl: url,
+                                  uploadedAt: uploadedAt,
+                                  sizeBytes: sizeBytes,
+                                  salt: salt,
+                                  iv: iv,
+                                  isFavorite: isFavorite,
+                                  isEncrypted: encrypted,
+                                ),
+                              ),
+                            );
+                          },
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           leading: Container(
                             padding: const EdgeInsets.all(12),

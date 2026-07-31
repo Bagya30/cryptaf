@@ -196,13 +196,16 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                 Timestamp? lastActiveTs = data['lastActiveTime'];
                 DateTime lastActiveDate = lastActiveTs?.toDate() ?? activationDate ?? DateTime.now();
                 _lastActiveDate = lastActiveDate;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    _startTimer(lastActiveDate, durationHours);
-                  }
-                });
+                if (_timer == null || !_timer!.isActive) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      _startTimer(lastActiveDate, durationHours);
+                    }
+                  });
+                }
               } else {
                 _timer?.cancel();
+                _timer = null;
               }
 
               _isExpired = status == 'expired';
@@ -211,7 +214,8 @@ class EmergencyScreenState extends State<EmergencyScreen> {
 
           return AnimatedBackground(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -345,64 +349,8 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 36),
-                            // Nominee Access Section
-                            GlassContainer(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Nominee Access Request',
-                                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    'If you are a designated nominee, enter your email to receive a verification code.',
-                                    style: TextStyle(color: Colors.white54, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  TextField(
-                                    controller: _emailController,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      hintText: 'Nominee Email Address',
-                                      hintStyle: const TextStyle(color: Colors.white38),
-                                      prefixIcon: const Icon(Icons.email_outlined, color: Colors.white54),
-                                      filled: true,
-                                      fillColor: Colors.white.withOpacity(0.05),
-                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  GradientButton(
-                                    text: 'Send Verification Code',
-                                    isLoading: _isSendingOtp,
-                                    onPressed: () async {
-                                      if (_emailController.text.isEmpty) return;
-                                      setState(() => _isSendingOtp = true);
-                                      await _firestore.sendNomineeOTP(_emailController.text);
-                                      if (!mounted) return;
-                                      NotificationService().sendNotification(
-                                        title: 'Nominee Access Request',
-                                        body: 'ðŸ‘¤ A nominee is attempting to access your vault.',
-                                        // ignore: use_build_context_synchronously
-                                        context: context,
-                                      );
-                                      setState(() => _isSendingOtp = false);
-                                      if (mounted) {
-                                        Navigator.push(
-                                          // ignore: use_build_context_synchronously
-                                          context,
-                                          MaterialPageRoute(builder: (context) => OtpScreen(email: _emailController.text)),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
                           ] else ...[
-                            const SizedBox(height: 30),
+                            const SizedBox(height: 24),
                             const Text(
                               'Logging in resets this timer automatically.',
                               style: TextStyle(color: Colors.white38, fontSize: 13, fontStyle: FontStyle.italic),
@@ -412,6 +360,71 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                       ),
                     ),
                   ],
+
+                  const SizedBox(height: 32),
+
+                  // Nominee Access Request Section (Always clearly accessible below Dead Man's Switch)
+                  GlassContainer(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.people_outline, color: Color(0xFFC9A84C), size: 22),
+                            SizedBox(width: 10),
+                            Text(
+                              'Nominee Access Portal',
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Designated nominees can request vault verification code or claim emergency access below.',
+                          style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                        ),
+                        const SizedBox(height: 20),
+                        TextField(
+                          controller: _emailController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Nominee Email Address',
+                            hintStyle: const TextStyle(color: Colors.white38),
+                            prefixIcon: const Icon(Icons.email_outlined, color: Colors.white54),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.05),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        GradientButton(
+                          text: 'Send Verification Code',
+                          isLoading: _isSendingOtp,
+                          onPressed: () async {
+                            if (_emailController.text.isEmpty) return;
+                            setState(() => _isSendingOtp = true);
+                            await _firestore.sendNomineeOTP(_emailController.text);
+                            if (!mounted) return;
+                            NotificationService().sendNotification(
+                              title: 'Nominee Access Request',
+                              body: 'A nominee is attempting to access your vault.',
+                              // ignore: use_build_context_synchronously
+                              context: context,
+                            );
+                            setState(() => _isSendingOtp = false);
+                            if (mounted) {
+                              Navigator.push(
+                                // ignore: use_build_context_synchronously
+                                context,
+                                MaterialPageRoute(builder: (context) => OtpScreen(email: _emailController.text)),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
 
                   const SizedBox(height: 40),
 

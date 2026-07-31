@@ -72,22 +72,6 @@ class FileViewScreenState extends State<FileViewScreen> {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  String _getMimeType(String type) {
-    switch (type.toUpperCase()) {
-      case 'PDF':
-        return 'application/pdf';
-      case 'PNG':
-        return 'image/png';
-      case 'JPG':
-      case 'JPEG':
-        return 'image/jpeg';
-      case 'DOC':
-      case 'DOCX':
-        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      default:
-        return 'application/octet-stream';
-    }
-  }
 
   Uint8List? _decryptedBytes;
 
@@ -104,19 +88,22 @@ class FileViewScreenState extends State<FileViewScreen> {
     });
 
     try {
-      // 1. Fetch encrypted file bytes from Cloudinary
+      debugPrint('Downloading encrypted file from URL: ${widget.downloadUrl}');
+      // 1. Fetch encrypted file bytes from Cloudinary (clean HTTP GET without disallowed client headers)
       final response = await http.get(
         Uri.parse(widget.downloadUrl),
-        headers: {
-          'Accept': '*/*',
-          'Access-Control-Allow-Origin': '*',
-        },
-      );
+      ).timeout(const Duration(seconds: 30));
+
+      debugPrint('Download status code: ${response.statusCode}, bytes length: ${response.bodyBytes.length}');
+
       if (response.statusCode != 200) {
-        throw Exception('Failed to download encrypted file from storage');
+        throw Exception('Failed to download file from storage (HTTP status ${response.statusCode})');
       }
 
       final Uint8List encryptedBytes = response.bodyBytes;
+      if (encryptedBytes.isEmpty) {
+        throw Exception('Downloaded file payload is empty');
+      }
 
       // 2. Derive key using PBKDF2
       final salt = (widget.salt != null && widget.salt!.isNotEmpty) 
@@ -140,9 +127,11 @@ class FileViewScreenState extends State<FileViewScreen> {
         );
       }
     } catch (e) {
+      debugPrint('File decryption/view error: $e');
       if (mounted) {
+        final errStr = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Decryption failed: Incorrect password or corrupted file.'), backgroundColor: Colors.redAccent),
+          SnackBar(content: Text('Could not open file: $errStr'), backgroundColor: Colors.redAccent),
         );
       }
     } finally {
@@ -478,10 +467,8 @@ class FileViewScreenState extends State<FileViewScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () async {
-                final String mimeType = _getMimeType(widget.type);
-                final String base64Data = base64Encode(_decryptedBytes!);
                 if (kIsWeb) {
-                  downloadFileWeb('data:$mimeType;base64,$base64Data', widget.name);
+                  downloadBlobWeb(_decryptedBytes!, widget.name);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('File saved to downloads')),
