@@ -24,6 +24,7 @@ class PlatformUploader extends BaseUploader {
     
     // Add fields
     fields.forEach((key, value) {
+      debugPrint('FormData append field -> $key: $value');
       formData.append(key, value);
     });
 
