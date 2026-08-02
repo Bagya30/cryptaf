@@ -28,4 +28,5 @@ jobs:
           EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
           EMAILJS_TEMPLATE_ID_DEFAULT: ${{ secrets.EMAILJS_TEMPLATE_ID_DEFAULT }}
           EMAILJS_USER_ID: ${{ secrets.EMAILJS_USER_ID }}
+          EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
         run: node scripts/check-emergency-status.js

@@ -1,17 +1,18 @@
 const admin = require('firebase-admin');
 
-async function checkEmergencyStatus() {
-  console.log('Starting Emergency Status Check...');
+async function testEmergencyTrigger() {
+  console.log('Starting Test Emergency Trigger...');
 
   // Initialize Firebase Admin
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    const fs = require('fs');
+    const serviceAccount = JSON.parse(fs.readFileSync('C:\\Users\\BAGYALAKSHMI\\Downloads\\cryptaf-36296-firebase-adminsdk-fbsvc-308fa2e013.json', 'utf8'));
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
     console.log('Firebase Admin initialized successfully.');
   } catch (error) {
-    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT or initialize Firebase Admin:', error);
+    console.error('Failed to parse local service account JSON or initialize Firebase Admin:', error);
     process.exit(1);
   }
 
@@ -26,49 +27,63 @@ async function checkEmergencyStatus() {
     console.warn('EmailJS environment variables (including private key) are missing. Emails will not be sent.');
   }
 
-  try {
-    const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('emergencyEnabled', '==', true).get();
+  const userId = 'BVimd4RYK9Zdv77ju5SuyhV6nRx1';
+  let originalDuration = 72;
 
-    if (snapshot.empty) {
-      console.log('No users with emergency enabled found.');
-      return;
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      console.log(`User ${userId} not found.`);
+      process.exit(1);
     }
 
+    const data = doc.data();
+    originalDuration = data.emergencyDurationHours || 72;
+    console.log(`Step 1: Found user. Original emergencyDurationHours is ${originalDuration}.`);
+
+    // Temporarily set to 1
+    console.log(`Step 2: Temporarily setting emergencyDurationHours to 1...`);
+    await userRef.update({
+      emergencyDurationHours: 1
+    });
+
+    // Run the expiry check logic for this specific user
+    console.log(`Step 3: Running expiry check logic for user ${userId}...`);
+    
+    // Fetch again just to be sure we have the updated data
+    const updatedDoc = await userRef.get();
+    const updatedData = updatedDoc.data();
+    
     const now = new Date();
-    console.log(`Checking ${snapshot.size} users with emergencyEnabled...`);
+    const lastActiveTs = updatedData.lastActiveTime;
+    const durationHours = updatedData.emergencyDurationHours; 
+    const currentStatus = updatedData.emergencyStatus;
+    const userName = updatedData.name || updatedData.email || 'User';
 
-    for (const doc of snapshot.docs) {
-      const data = doc.data();
-      const lastActiveTs = data.lastActiveTime;
-      const durationHours = data.emergencyDurationHours || 168; // default to 7 days
-      const currentStatus = data.emergencyStatus;
-      const userName = data.name || data.email || 'User';
-
-      if (!lastActiveTs) {
-        console.log(`User ${doc.id} has no lastActiveTime. Skipping.`);
-        continue;
-      }
-
+    if (!lastActiveTs) {
+      console.log(`User ${userId} has no lastActiveTime. Cannot proceed with check.`);
+    } else {
       const lastActiveTime = lastActiveTs.toDate();
       const diffMs = now.getTime() - lastActiveTime.getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
 
-      console.log(`User ${doc.id} - Inactive for ${diffHours.toFixed(2)} hours (Threshold: ${durationHours} hours). Status: ${currentStatus}`);
+      console.log(`User ${userId} - Inactive for ${diffHours.toFixed(2)} hours (Threshold: ${durationHours} hours). Status: ${currentStatus}`);
 
       if (diffHours >= durationHours) {
         if (currentStatus !== 'expired') {
-          console.log(`User ${doc.id} timer EXPIRED. Updating status to "expired".`);
+          console.log(`User ${userId} timer EXPIRED. Updating status to "expired".`);
           
           // 1. Update status in Firestore
-          await doc.ref.update({
+          await userRef.update({
             emergencyStatus: 'expired'
           });
-          console.log(`Updated user ${doc.id} emergencyStatus to 'expired'.`);
+          console.log(`Updated user ${userId} emergencyStatus to 'expired'.`);
 
           // 2. Fetch nominees
-          const nomineesSnapshot = await doc.ref.collection('nominees').get();
-          console.log(`Found ${nomineesSnapshot.size} nominees for user ${doc.id}.`);
+          const nomineesSnapshot = await userRef.collection('nominees').get();
+          console.log(`Found ${nomineesSnapshot.size} nominees for user ${userId}.`);
 
           // 3. Send email to each nominee
           for (const nomineeDoc of nomineesSnapshot.docs) {
@@ -79,7 +94,7 @@ async function checkEmergencyStatus() {
               console.log(`Sending email to nominee: ${nomineeEmail}`);
               
               const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')} on ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-              const message = `The vault owner (${userName}) has been inactive and emergency access has been granted. Visit https://cryptaf-36296.web.app/nominee-access?vaultOwner=${doc.id} to request access.`;
+              const message = `The vault owner (${userName}) has been inactive and emergency access has been granted. Visit https://cryptaf-36296.web.app/nominee-access?vaultOwner=${userId} to request access.`;
               
               const payload = {
                 service_id: EMAILJS_SERVICE_ID,
@@ -116,15 +131,29 @@ async function checkEmergencyStatus() {
             }
           }
         } else {
-          console.log(`User ${doc.id} is already expired. No action needed.`);
+          console.log(`User ${userId} is already expired. No action needed.`);
         }
+      } else {
+        console.log(`User ${userId} timer has not expired yet.`);
       }
     }
-    console.log('Emergency Status Check complete.');
+
   } catch (error) {
-    console.error('Error querying users or processing data:', error);
-    process.exit(1);
+    console.error('Error during test execution:', error);
+  } finally {
+    // Restore the original duration
+    console.log(`Step 4: Restoring original emergencyDurationHours to ${originalDuration}...`);
+    try {
+      const userRef = db.collection('users').doc(userId);
+      await userRef.update({
+        emergencyDurationHours: originalDuration
+      });
+      console.log('Restoration complete.');
+    } catch (restoreError) {
+      console.error('Failed to restore original emergencyDurationHours:', restoreError);
+    }
+    process.exit(0);
   }
 }
 
-checkEmergencyStatus();
+testEmergencyTrigger();
