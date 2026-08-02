@@ -25,13 +25,10 @@ class EmergencyScreen extends StatefulWidget {
 class EmergencyScreenState extends State<EmergencyScreen> {
   final FirestoreService _firestore = FirestoreService();
   final TextEditingController _emailController = TextEditingController();
-  Timer? _timer;
-  Duration _remainingTime = Duration.zero;
-  bool _isExpired = false;
+  final ScrollController _scrollController = ScrollController();
+  
   bool _isSendingOtp = false;
-  bool _hasSent24hWarning = false;
   int _durationHours = 168;
-  DateTime? _lastActiveDate;
 
   @override
   void initState() {
@@ -41,56 +38,9 @@ class EmergencyScreenState extends State<EmergencyScreen> {
 
   @override
   void dispose() {
-    _timer?.cancel();
     _emailController.dispose();
+    _scrollController.dispose();
     super.dispose();
-  }
-
-  void _startTimer(DateTime activationDate, int durationHours) {
-    _calculateRemainingTime(activationDate, durationHours);
-    if (_timer != null && _timer!.isActive) return;
-    
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() {
-        if (_lastActiveDate != null) {
-          _calculateRemainingTime(_lastActiveDate!, _durationHours);
-        }
-      });
-    });
-  }
-
-  void _calculateRemainingTime(DateTime lastActiveDate, int durationHours) {
-    final expiryDate = lastActiveDate.add(Duration(hours: durationHours));
-    final now = DateTime.now();
-    
-    if (now.difference(lastActiveDate).inSeconds < 5) {
-      _remainingTime = Duration(hours: durationHours);
-    } else {
-      _remainingTime = expiryDate.difference(now);
-    }
-
-    if (_remainingTime.isNegative) {
-      _remainingTime = Duration.zero;
-      if (!_isExpired) {
-        _isExpired = true;
-        _firestore.markEmergencyExpired();
-        _notifyNomineesOfEmergency();
-      }
-      _timer?.cancel();
-    } else if (_remainingTime.inHours < 24 && _remainingTime.inHours > 0) {
-      if (!_hasSent24hWarning) {
-        _hasSent24hWarning = true;
-        NotificationService().sendNotification(
-          title: 'Dead Man\'s Switch Warning',
-          body: 'âš ï¸ Your vault will transfer in less than 24 hours! Open Cryptaf to reset.',
-          context: context,
-        );
-      }
-    }
   }
 
   Future<void> _notifyNomineesOfEmergency() async {
@@ -146,15 +96,6 @@ class EmergencyScreenState extends State<EmergencyScreen> {
     }
   }
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String days = duration.inDays.toString();
-    String hours = twoDigits(duration.inHours.remainder(24));
-    String minutes = twoDigits(duration.inMinutes.remainder(60));
-    String seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "${days}d ${hours}h ${minutes}m ${seconds}s";
-  }
-
   @override
   Widget build(BuildContext context) {
     final teal = Theme.of(context).colorScheme.secondary;
@@ -180,6 +121,7 @@ class EmergencyScreenState extends State<EmergencyScreen> {
           bool isEnabled = false;
           String status = 'disabled';
           DateTime? activationDate;
+          DateTime? lastActiveDate;
 
           int durationHours = 168;
           if (snapshot.hasData && snapshot.data!.exists) {
@@ -189,31 +131,24 @@ class EmergencyScreenState extends State<EmergencyScreen> {
               status = data['emergencyStatus'] ?? 'disabled';
               Timestamp? ts = data['activationTimestamp'];
               durationHours = data['emergencyDurationHours'] ?? 168;
+              if (durationHours < 24) {
+                durationHours = 24;
+              }
               _durationHours = durationHours;
 
               if (isEnabled && status != 'expired') {
                 activationDate = ts?.toDate();
                 Timestamp? lastActiveTs = data['lastActiveTime'];
-                DateTime lastActiveDate = lastActiveTs?.toDate() ?? activationDate ?? DateTime.now();
-                _lastActiveDate = lastActiveDate;
-                if (_timer == null || !_timer!.isActive) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _startTimer(lastActiveDate, durationHours);
-                    }
-                  });
-                }
-              } else {
-                _timer?.cancel();
-                _timer = null;
+                lastActiveDate = lastActiveTs?.toDate() ?? activationDate ?? DateTime.now();
               }
-
-              _isExpired = status == 'expired';
             }
           }
+          
+          bool isExpired = status == 'expired';
 
           return AnimatedBackground(
             child: SingleChildScrollView(
+              controller: _scrollController,
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
               child: Column(
@@ -254,10 +189,6 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                       value: isEnabled,
                       onChanged: (bool value) {
                         _firestore.updateEmergencySettings(value);
-                        if (!value) {
-                          _timer?.cancel();
-                          _remainingTime = Duration.zero;
-                        }
                       },
                     ),
                   ),
@@ -292,7 +223,11 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                               if (val == '48 Hours') newHours = 48;
                               if (val == '72 Hours') newHours = 72;
                               if (val == '30 Days') newHours = 720;
-                              setState(() => _durationHours = newHours);
+                              
+                              setState(() {
+                                _durationHours = newHours;
+                              });
+                              
                               await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).set({
                                 'emergencyDurationHours': newHours,
                               }, SetOptions(merge: true));
@@ -307,58 +242,24 @@ class EmergencyScreenState extends State<EmergencyScreen> {
 
                   // Timer Display
                   if (isEnabled) ...[
-                    Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            _isExpired ? 'PROTOCOL EXPIRED' : 'TIME UNTIL ACCESS TRANSFER',
-                            style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2),
-                          ),
-                          const SizedBox(height: 20),
-                          GlassContainer(
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                            child: Text(
-                              _isExpired ? 'EXPIRED' : _formatDuration(_remainingTime),
-                              style: TextStyle(
-                                color: _isExpired ? Colors.redAccent : teal,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'monospace',
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ),
-                          if (_isExpired) ...[
-                            const SizedBox(height: 24),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.emergency_share, color: Colors.redAccent, size: 20),
-                                  SizedBox(width: 10),
-                                  Text(
-                                    'Access Transfer Initiated',
-                                    style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ] else ...[
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Logging in resets this timer automatically.',
-                              style: TextStyle(color: Colors.white38, fontSize: 13, fontStyle: FontStyle.italic),
-                            ),
-                          ],
-                        ],
+                    if (lastActiveDate != null)
+                      CountdownDisplay(
+                        lastActiveDate: lastActiveDate,
+                        durationHours: _durationHours,
+                        initialIsExpired: isExpired,
+                        onExpired: () async {
+                          await _firestore.markEmergencyExpired();
+                          await _notifyNomineesOfEmergency();
+                        },
+                      )
+                    else if (isExpired)
+                      // Fallback if expired but no lastActiveDate
+                      CountdownDisplay(
+                        lastActiveDate: DateTime.now(),
+                        durationHours: 0,
+                        initialIsExpired: true,
+                        onExpired: () {},
                       ),
-                    ),
                   ],
 
                   const SizedBox(height: 32),
@@ -429,7 +330,7 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                   const SizedBox(height: 40),
 
                   // Detailed Steps
-                  if (isEnabled && !_isExpired) ...[
+                  if (isEnabled && !isExpired) ...[
                     const Text('Security Protocol', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 20),
                     _buildStep(Icons.check_circle_outline, 'Step 1: System monitors for login activity', true),
@@ -460,7 +361,8 @@ class EmergencyScreenState extends State<EmergencyScreen> {
   Future<void> _printEmergencyCard() async {
     final user = FirebaseAuth.instance.currentUser;
     final userName = user?.displayName ?? user?.email ?? 'Vault Owner';
-    const portalUrl = 'https://cryptaf-36296.web.app/nominee-portal';
+    final String uid = user?.uid ?? '';
+    final String portalUrl = 'https://cryptaf-36296.web.app/nominee-access?vaultOwner=$uid';
 
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async {
@@ -520,6 +422,176 @@ class EmergencyScreenState extends State<EmergencyScreen> {
           Icon(icon, color: isDone ? const Color(0xFFC9A84C) : Colors.white24, size: 20),
           const SizedBox(width: 16),
           Text(text, style: TextStyle(color: isDone ? Colors.white : Colors.white38, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+}
+
+class CountdownDisplay extends StatefulWidget {
+  final DateTime lastActiveDate;
+  final int durationHours;
+  final bool initialIsExpired;
+  final VoidCallback onExpired;
+
+  const CountdownDisplay({
+    super.key,
+    required this.lastActiveDate,
+    required this.durationHours,
+    required this.initialIsExpired,
+    required this.onExpired,
+  });
+
+  @override
+  State<CountdownDisplay> createState() => _CountdownDisplayState();
+}
+
+class _CountdownDisplayState extends State<CountdownDisplay> {
+  Timer? _timer;
+  Duration _remainingTime = Duration.zero;
+  bool _isExpired = false;
+  bool _hasSent24hWarning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpired = widget.initialIsExpired;
+    if (!_isExpired) {
+      _startTimer();
+    }
+  }
+
+  @override
+  void didUpdateWidget(CountdownDisplay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.lastActiveDate != widget.lastActiveDate || 
+        oldWidget.durationHours != widget.durationHours ||
+        oldWidget.initialIsExpired != widget.initialIsExpired) {
+      
+      _isExpired = widget.initialIsExpired;
+      if (!_isExpired) {
+        if (_timer == null || !_timer!.isActive) {
+          _startTimer();
+        } else {
+          _calculateRemainingTime();
+        }
+      } else {
+        _timer?.cancel();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _calculateRemainingTime();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _calculateRemainingTime();
+      });
+    });
+  }
+
+  void _calculateRemainingTime() {
+    if (_isExpired) return;
+
+    final expiryDate = widget.lastActiveDate.add(Duration(hours: widget.durationHours));
+    final now = DateTime.now();
+    
+    if (now.difference(widget.lastActiveDate).inSeconds < 5) {
+      _remainingTime = Duration(hours: widget.durationHours);
+    } else {
+      _remainingTime = expiryDate.difference(now);
+    }
+
+    if (_remainingTime.isNegative) {
+      _remainingTime = Duration.zero;
+      if (!_isExpired) {
+        _isExpired = true;
+        _timer?.cancel();
+        widget.onExpired();
+      }
+    } else if (_remainingTime.inHours < 24 && _remainingTime.inHours > 0) {
+      if (!_hasSent24hWarning) {
+        _hasSent24hWarning = true;
+        NotificationService().sendNotification(
+          title: 'Dead Man\'s Switch Warning',
+          body: '⚠️ Your vault will transfer in less than 24 hours! Open Cryptaf to reset.',
+          context: context,
+        );
+      }
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String days = duration.inDays.toString();
+    String hours = twoDigits(duration.inHours.remainder(24));
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "${days}d ${hours}h ${minutes}m ${seconds}s";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final teal = Theme.of(context).colorScheme.secondary;
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            _isExpired ? 'PROTOCOL EXPIRED' : 'TIME UNTIL ACCESS TRANSFER',
+            style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2),
+          ),
+          const SizedBox(height: 20),
+          GlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            child: Text(
+              _isExpired ? 'EXPIRED' : _formatDuration(_remainingTime),
+              style: TextStyle(
+                color: _isExpired ? Colors.redAccent : teal,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          if (_isExpired) ...[
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.emergency_share, color: Colors.redAccent, size: 20),
+                  SizedBox(width: 10),
+                  Text(
+                    'Access Transfer Initiated',
+                    style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 24),
+            const Text(
+              'Logging in resets this timer automatically.',
+              style: TextStyle(color: Colors.white38, fontSize: 13, fontStyle: FontStyle.italic),
+            ),
+          ],
         ],
       ),
     );

@@ -1,5 +1,7 @@
 import 'package:cryptaf/screens/emergency_profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:cryptaf/services/inactivity_timer_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -23,15 +25,42 @@ import 'package:cryptaf/web_url_stub.dart' if (dart.library.html) 'dart:html' as
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SemanticsBinding.instance.ensureSemantics();
+  // Load environment config. NOTE: .env is a dotfile and gets ignored by
+  // Firebase Hosting's "**/.*" rule, so it never reaches the server.
+  // app_config.txt is the non-dotfile copy that Firebase DOES deploy.
+  bool envLoaded = false;
   try {
-    await dotenv.load(fileName: ".env");
-  } catch (_) {
+    await dotenv.load(fileName: 'app_config.txt');
+    envLoaded = true;
+    debugPrint('[ENV] Loaded from app_config.txt. '
+        'Keys: ${dotenv.env.keys.toList()}');
+  } catch (e1) {
+    debugPrint('[ENV] app_config.txt FAILED: $e1');
+    // Fallback: try .env (works on Android/iOS, blocked on web by Firebase)
     try {
-      await dotenv.load(fileName: "assets/.env");
-    } catch (e) {
-      debugPrint("Failed to load .env file: $e");
+      await dotenv.load(fileName: '.env');
+      envLoaded = true;
+      debugPrint('[ENV] Loaded from .env. '
+          'Keys: ${dotenv.env.keys.toList()}');
+    } catch (e2) {
+      debugPrint('[ENV] .env ALSO FAILED: $e2');
+      // Last resort: try the assets/ prefix path
+      try {
+        await dotenv.load(fileName: 'assets/.env');
+        envLoaded = true;
+        debugPrint('[ENV] Loaded from assets/.env. '
+            'Keys: ${dotenv.env.keys.toList()}');
+      } catch (e3) {
+        debugPrint('[ENV] ALL env load attempts failed. '
+            'Last error: $e3. App will run without credentials.');
+      }
     }
   }
+  if (!envLoaded) {
+    debugPrint('[ENV] WARNING: No env file loaded. '
+        'Cloudinary uploads will fail.');
+  }
+
   try {
     if (kIsWeb) {
       await Firebase.initializeApp(
@@ -93,7 +122,6 @@ class CryptafApp extends StatefulWidget {
 }
 
 class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
-  ThemeMode _themeMode = ThemeMode.dark;
   String _initialRoute = '/';
   Timer? _activityTimer;
 
@@ -101,11 +129,11 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    HardwareKeyboard.instance.addHandler(_handleKeyInput);
     FirestoreService().updateLastActive();
     _activityTimer = Timer.periodic(const Duration(minutes: 30), (_) {
       FirestoreService().updateLastActive();
     });
-    _loadTheme();
     if (kIsWeb) {
       final currentUrl = html.window.location.href;
       if (currentUrl.contains('/emergency/')) {
@@ -119,29 +147,25 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
           _initialRoute = '/share/$rawToken';
         }
       } else if (currentUrl.contains('/nominee-access')) {
-        _initialRoute = '/nominee-access';
+        final uri = Uri.parse(currentUrl);
+        final vaultOwner = uri.queryParameters['vaultOwner'];
+        if (vaultOwner != null && vaultOwner.isNotEmpty) {
+          _initialRoute = '/nominee-access?vaultOwner=$vaultOwner';
+        } else {
+          _initialRoute = '/nominee-access';
+        }
       }
     }
   }
 
-  Future<void> _loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLight = prefs.getBool('lightMode') ?? false;
-    setState(() {
-      _themeMode = isLight ? ThemeMode.light : ThemeMode.dark;
-    });
-  }
-
-  void toggleTheme(bool isLight) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('lightMode', isLight);
-    setState(() {
-      _themeMode = isLight ? ThemeMode.light : ThemeMode.dark;
-    });
+  bool _handleKeyInput(KeyEvent event) {
+    InactivityTimerService().reset();
+    return false;
   }
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleKeyInput);
     _activityTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -185,48 +209,24 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
       ),
     );
 
-    final lightTheme = ThemeData(
-      brightness: Brightness.light,
-      scaffoldBackgroundColor: Colors.white,
-      primaryColor: Colors.white,
-      colorScheme: ColorScheme.fromSwatch(brightness: Brightness.light).copyWith(
-        secondary: const Color(0xFFC9A84C), // Antique Gold Accent
-      ),
-      textTheme: GoogleFonts.oxaniumTextTheme(Theme.of(context).textTheme).apply(
-        bodyColor: Colors.black87,
-        displayColor: Colors.black87,
-      ),
-      textSelectionTheme: TextSelectionThemeData(
-        cursorColor: const Color(0xFFC9A84C),
-        selectionColor: const Color(0xFFC9A84C).withOpacity(0.3),
-        selectionHandleColor: const Color(0xFFC9A84C),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black87),
-        titleTextStyle: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: <TargetPlatform, PageTransitionsBuilder>{
-          TargetPlatform.android: FadePageTransitionsBuilder(),
-          TargetPlatform.iOS: FadePageTransitionsBuilder(),
-          TargetPlatform.windows: FadePageTransitionsBuilder(),
-          TargetPlatform.macOS: FadePageTransitionsBuilder(),
-          TargetPlatform.linux: FadePageTransitionsBuilder(),
-        },
-      ),
-    );
-
     return MaterialApp(
       title: 'Cryptaf',
       debugShowCheckedModeBanner: false,
       showSemanticsDebugger: false,
       initialRoute: _initialRoute,
-      themeMode: _themeMode,
-      theme: lightTheme,
-      darkTheme: darkTheme,
+      theme: darkTheme,
       navigatorObservers: [ActivityObserver()],
+      builder: (context, child) {
+        return Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) => InactivityTimerService().reset(),
+          onPointerMove: (_) => InactivityTimerService().reset(),
+          onPointerUp: (_) => InactivityTimerService().reset(),
+          onPointerHover: (_) => InactivityTimerService().reset(),
+          onPointerPanZoomUpdate: (_) => InactivityTimerService().reset(),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       onGenerateRoute: (settings) {
         final path = settings.name;
         if (path != null && path.startsWith('/share/')) {
@@ -242,8 +242,13 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
           );
         }
         if (path != null && (path == '/nominee-access' || path.startsWith('/nominee-access'))) {
+          String? vaultOwnerId;
+          if (path.contains('?')) {
+            final uri = Uri.parse(path);
+            vaultOwnerId = uri.queryParameters['vaultOwner'];
+          }
           return MaterialPageRoute(
-            builder: (context) => const NomineePortalScreen(),
+            builder: (context) => NomineePortalScreen(vaultOwnerId: vaultOwnerId),
           );
         }
         return MaterialPageRoute(builder: (context) => const SplashScreen());

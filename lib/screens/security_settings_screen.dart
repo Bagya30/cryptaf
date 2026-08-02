@@ -308,6 +308,8 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
     final TextEditingController confirmController = TextEditingController();
     bool isSaving = false;
     String errorMsg = '';
+    bool obscureDuress = true;
+    bool obscureConfirmDuress = true;
 
     showDialog(
       context: context,
@@ -330,26 +332,34 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
               const SizedBox(height: 20),
               TextField(
                 controller: passwordController,
-                obscureText: true,
+                obscureText: obscureDuress,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Duress Password',
                   labelStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.05),
+                  suffixIcon: IconButton(
+                    icon: Icon(obscureDuress ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: const Color(0xFFC9A84C), size: 20),
+                    onPressed: () => setDialogState(() => obscureDuress = !obscureDuress),
+                  ),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: confirmController,
-                obscureText: true,
+                obscureText: obscureConfirmDuress,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Confirm Duress Password',
                   labelStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.05),
+                  suffixIcon: IconButton(
+                    icon: Icon(obscureConfirmDuress ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: const Color(0xFFC9A84C), size: 20),
+                    onPressed: () => setDialogState(() => obscureConfirmDuress = !obscureConfirmDuress),
+                  ),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
               ),
@@ -446,6 +456,9 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
     String errorMsg = '';
     double strength = 0.0;
     Color strengthColor = Colors.redAccent;
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
 
     void calculateStrength(String pass) {
       double s = 0.0;
@@ -483,13 +496,17 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                 const SizedBox(height: 8),
                 TextField(
                   controller: currentPassController,
-                  obscureText: true,
+                  obscureText: obscureCurrent,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Enter current password',
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureCurrent ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: const Color(0xFFC9A84C), size: 20),
+                      onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
+                    ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -499,7 +516,7 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                 const SizedBox(height: 8),
                 TextField(
                   controller: newPassController,
-                  obscureText: true,
+                  obscureText: obscureNew,
                   style: const TextStyle(color: Colors.white),
                   onChanged: (val) {
                     setDialogState(() {
@@ -511,6 +528,10 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: const Color(0xFFC9A84C), size: 20),
+                      onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                    ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -536,13 +557,17 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                 const SizedBox(height: 8),
                 TextField(
                   controller: confirmPassController,
-                  obscureText: true,
+                  obscureText: obscureConfirm,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Re-enter new password',
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: const Color(0xFFC9A84C), size: 20),
+                      onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                    ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -628,6 +653,8 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
     String errorMsg = '';
     int totalFiles = 0;
     int processedFiles = 0;
+    bool obscureOldVault = true;
+    bool obscureNewVault = true;
 
     showDialog(
       context: context,
@@ -654,13 +681,17 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                 const SizedBox(height: 8),
                 TextField(
                   controller: oldPassController,
-                  obscureText: true,
+                  obscureText: obscureOldVault,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Enter old vault password',
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureOldVault ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: const Color(0xFFC9A84C), size: 20),
+                      onPressed: () => setDialogState(() => obscureOldVault = !obscureOldVault),
+                    ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -669,13 +700,17 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                 const SizedBox(height: 8),
                 TextField(
                   controller: newPassController,
-                  obscureText: true,
+                  obscureText: obscureNewVault,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Enter new vault password',
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureNewVault ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: const Color(0xFFC9A84C), size: 20),
+                      onPressed: () => setDialogState(() => obscureNewVault = !obscureNewVault),
+                    ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -832,6 +867,7 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
     String errorMsg = '';
     int totalFiles = 0;
     int processedFiles = 0;
+    bool obscureForgotNew = true;
 
     showDialog(
       context: context,
@@ -873,13 +909,17 @@ class SecuritySettingsScreenState extends State<SecuritySettingsScreen> with Sin
                 const SizedBox(height: 8),
                 TextField(
                   controller: newPassController,
-                  obscureText: true,
+                  obscureText: obscureForgotNew,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Enter new vault password',
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureForgotNew ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: const Color(0xFFC9A84C), size: 20),
+                      onPressed: () => setDialogState(() => obscureForgotNew = !obscureForgotNew),
+                    ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),

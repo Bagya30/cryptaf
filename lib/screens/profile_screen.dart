@@ -13,12 +13,8 @@ import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/screens/login_screen.dart';
 import 'package:cryptaf/screens/app_info_screen.dart';
 import 'package:cryptaf/screens/gdpr_screen.dart';
-import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cryptaf/services/cloudinary_service.dart';
-import 'package:cryptaf/main.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:cryptaf/screens/assistant_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -129,58 +125,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SnackBar(content: Text('Profile updated successfully')),
       );
     }
-  }
-
-  void _showQRCodeDialog(String uid) {
-    final token = 'cryptaf_access_${uid}_${DateTime.now().millisecondsSinceEpoch}';
-    
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF0A0A0A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Colors.white12),
-          ),
-          title: const Text('Vault Access QR', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Nominees can scan this QR code to request emergency vault access.', style: TextStyle(color: Colors.white54, fontSize: 13)),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: QrImageView(
-                  data: token,
-                  version: QrVersions.auto,
-                  size: 200.0,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text('Secure Token Generated', style: TextStyle(color: Colors.greenAccent, fontSize: 12, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close', style: TextStyle(color: Colors.white54)),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('QR Code saved to gallery')));
-              },
-              child: const Text('Save QR', style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _deleteAccount() async {
@@ -367,31 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          
-          // Preferences (Theme Toggle)
-          GlassContainer(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Preferences',
-                  style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: teal,
-                  title: Text('Light Mode Theme', style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
-                  subtitle: Text('Toggle between crisp light and classic dark gold theme', style: TextStyle(color: subColor, fontSize: 12)),
-                  value: !isDark,
-                  onChanged: (val) {
-                    CryptafApp.of(context)?.toggleTheme(val);
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+
 
           GlassContainer(
             child: Column(
@@ -460,54 +380,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Divider(color: isDark ? Colors.white12 : Colors.black12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.qr_code_2, color: teal),
-                  title: Text('Vault Access QR', style: TextStyle(color: textColor)),
-                  trailing: Icon(Icons.chevron_right, color: subColor),
-                  onTap: () {
-                    if (_user != null) {
-                      _showQRCodeDialog(_user!.uid);
-                    }
-                  },
-                ),
-                Divider(color: isDark ? Colors.white12 : Colors.black12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.gavel_outlined, color: teal),
                   title: Text('GDPR Rights', style: TextStyle(color: textColor)),
                   trailing: Icon(Icons.chevron_right, color: subColor),
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GdprScreen())),
-                ),
-                Divider(color: isDark ? Colors.white12 : Colors.black12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.star_rate_outlined, color: teal),
-                  title: Text('Rate This App', style: TextStyle(color: textColor)),
-                  trailing: Icon(Icons.chevron_right, color: subColor),
-                  onTap: () async {
-                    final url = Uri.parse('https://play.google.com/store/apps/details?id=com.cryptaf.app');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    } else {
-                      if (!mounted) return;
-                      // ignore: use_build_context_synchronously
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Could not open Play Store link')),
-                      );
-                    }
-                  },
-                ),
-                Divider(color: isDark ? Colors.white12 : Colors.black12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.share_outlined, color: teal),
-                  title: Text('Share App', style: TextStyle(color: textColor)),
-                  trailing: Icon(Icons.chevron_right, color: subColor),
-                  onTap: () {
-                    Clipboard.setData(const ClipboardData(text: 'https://play.google.com/store/apps/details?id=com.cryptaf.app'));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('App store link copied to clipboard!')),
-                    );
-                  },
                 ),
               ],
             ),

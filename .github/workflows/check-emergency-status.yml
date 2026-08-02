@@ -1,0 +1,31 @@
+name: Check Emergency Status
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs every hour
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Node 18 has built-in fetch
+          
+      - name: Install Dependencies
+        run: |
+          npm install firebase-admin
+          
+      - name: Run Emergency Status Check
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
+          EMAILJS_TEMPLATE_ID_DEFAULT: ${{ secrets.EMAILJS_TEMPLATE_ID_DEFAULT }}
+          EMAILJS_USER_ID: ${{ secrets.EMAILJS_USER_ID }}
+        run: node scripts/check-emergency-status.js

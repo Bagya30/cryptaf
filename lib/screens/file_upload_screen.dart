@@ -28,6 +28,7 @@ class FileUploadScreenState extends State<FileUploadScreen> {
 
   bool isEncrypted = true;
   bool isUploading = false;
+  bool _obscurePassword = true;
   String selectedCategory = 'Documents';
   final List<String> categories = ['Documents', 'Medical', 'Financial', 'Legal'];
 
@@ -363,7 +364,7 @@ class FileUploadScreenState extends State<FileUploadScreen> {
                       const SizedBox(height: 10),
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           hintText: 'Enter your vault password',
@@ -371,6 +372,14 @@ class FileUploadScreenState extends State<FileUploadScreen> {
                           filled: true,
                           fillColor: Colors.white.withOpacity(0.05),
                           prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFC9A84C)),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: const Color(0xFFC9A84C),
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,

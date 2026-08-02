@@ -28,6 +28,7 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
 
   bool _isVaultUnlocked = false;
   bool _isUnlocking = false;
+  bool _obscureVaultPassword = true;
   String _unlockError = '';
   final _vaultPassCtrl = TextEditingController();
 
@@ -70,6 +71,7 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
     final TextEditingController usernameCtrl = TextEditingController();
     final TextEditingController passwordCtrl = TextEditingController();
     bool isSaving = false;
+    bool obscureDialogPassword = true;
 
     showDialog(
       context: context,
@@ -121,13 +123,21 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: passwordCtrl,
-                  obscureText: true,
+                  obscureText: obscureDialogPassword,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Enter secret password',
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureDialogPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        color: const Color(0xFFC9A84C),
+                        size: 20,
+                      ),
+                      onPressed: () => setDialogState(() => obscureDialogPassword = !obscureDialogPassword),
+                    ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -219,13 +229,21 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                   const SizedBox(height: 24),
                   TextField(
                     controller: _vaultPassCtrl,
-                    obscureText: true,
+                    obscureText: _obscureVaultPassword,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Vault Password',
                       hintStyle: const TextStyle(color: Colors.white24),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.05),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureVaultPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          color: const Color(0xFFC9A84C),
+                          size: 20,
+                        ),
+                        onPressed: () => setState(() => _obscureVaultPassword = !_obscureVaultPassword),
+                      ),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     ),
                   ),

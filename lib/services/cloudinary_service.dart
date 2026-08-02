@@ -1,30 +1,20 @@
 import 'package:flutter/foundation.dart';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'uploader/uploader_mobile.dart'
     if (dart.library.html) 'uploader/uploader_web.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CloudinaryService {
   static String get _cloudName => dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
-  static String get _apiKey => dotenv.env['CLOUDINARY_API_KEY'] ?? '';
-  static String get _apiSecret => dotenv.env['CLOUDINARY_API_SECRET'] ?? '';
 
   Future<String?> uploadFile(String fileName, Uint8List fileBytes, {String resourceType = 'auto'}) async {
     try {
-      if (_cloudName.isEmpty || _apiKey.isEmpty || _apiSecret.isEmpty) {
-        throw Exception('Cloudinary credentials not loaded - .env file may be missing or failed to load');
+      if (_cloudName.isEmpty) {
+        throw Exception('Cloudinary credentials not loaded - app_config.txt file may be missing or failed to load');
       }
 
-      final timestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round().toString();
-      
-      // Generate Signature
-      final stringToSign = 'timestamp=$timestamp$_apiSecret';
-      final bytes = utf8.encode(stringToSign);
-      final digest = sha1.convert(bytes);
-      final signature = digest.toString();
+      final uploadPreset = resourceType == 'raw' ? 'cryptaf_vault' : 'cryptaf_media';
 
-      debugPrint('Cloudinary Upload Params -> url: https://api.cloudinary.com/v1_1/$_cloudName/$resourceType/upload, api_key: ${_apiKey.isNotEmpty ? "*****" : "EMPTY"}, timestamp: $timestamp');
+      debugPrint('Cloudinary Upload Params -> url: https://api.cloudinary.com/v1_1/$_cloudName/$resourceType/upload, preset: $uploadPreset');
 
       final uploader = PlatformUploader();
       
@@ -33,9 +23,7 @@ class CloudinaryService {
         fileName: fileName,
         fileBytes: fileBytes,
         fields: {
-          'api_key': _apiKey,
-          'timestamp': timestamp,
-          'signature': signature,
+          'upload_preset': uploadPreset,
         },
       );
     } catch (e) {

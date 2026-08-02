@@ -2,10 +2,6 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -31,67 +27,12 @@ class FirestoreService {
     await updateSetupStep('uploadFirstFile');
   }
 
-  String _getPublicIdFromUrl(String url) {
-    try {
-      final uri = Uri.parse(url);
-      final pathSegments = uri.pathSegments;
-      int versionIndex = -1;
-      for (int i = 0; i < pathSegments.length; i++) {
-        if (pathSegments[i].startsWith('v') && RegExp(r'^v\d+$').hasMatch(pathSegments[i])) {
-          versionIndex = i;
-          break;
-        }
-      }
-      
-      List<String> publicIdSegments;
-      if (versionIndex != -1 && versionIndex < pathSegments.length - 1) {
-        publicIdSegments = pathSegments.sublist(versionIndex + 1);
-      } else {
-        publicIdSegments = [pathSegments.last];
-      }
-      
-      final fullPublicId = publicIdSegments.join('/');
-      if (fullPublicId.contains('.')) {
-        final parts = fullPublicId.split('.');
-        parts.removeLast();
-        return parts.join('.');
-      }
-      return fullPublicId;
-    } catch (e) {
-      debugPrint('Error parsing public_id: $e');
-      return '';
-    }
-  }
-
   Future<void> _deleteFromCloudinary(String downloadUrl) async {
-    try {
-      final publicId = _getPublicIdFromUrl(downloadUrl);
-      if (publicId.isEmpty) return;
-
-      final timestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round().toString();
-      final apiKey = dotenv.env['CLOUDINARY_API_KEY'] ?? '';
-      final apiSecret = dotenv.env['CLOUDINARY_API_SECRET'] ?? '';
-      final cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
-
-      // construct signature: sorted alphabetically
-      final stringToSign = 'public_id=$publicId&timestamp=$timestamp$apiSecret';
-      final bytes = utf8.encode(stringToSign);
-      final signature = sha1.convert(bytes).toString();
-
-      final response = await http.delete(
-        Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/destroy'),
-        body: {
-          'public_id': publicId,
-          'api_key': apiKey,
-          'timestamp': timestamp,
-          'signature': signature,
-        },
-      );
-      debugPrint('Cloudinary Deletion Status: ${response.statusCode}');
-      debugPrint('Cloudinary Deletion Response: ${response.body}');
-    } catch (e) {
-      debugPrint('Failed to delete resource from Cloudinary: $e');
-    }
+    // Client-side deletion from Cloudinary is disabled.
+    // We removed CLOUDINARY_API_SECRET from the client for security.
+    // To re-enable this, implement a Firebase Cloud Function that uses the 
+    // Admin SDK/Cloudinary Node SDK with the secret stored securely.
+    debugPrint('Client-side Cloudinary deletion is disabled (requires backend)');
   }
 
   Future<void> deleteFileRecord(String docId, String fileName) async {

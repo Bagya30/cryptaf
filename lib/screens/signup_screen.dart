@@ -25,6 +25,7 @@ class _SignupScreenState extends State<SignupScreen> {
   String password = '';
   String error = '';
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
@@ -242,9 +243,18 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
-                            obscureText: true,
+                            obscureText: _obscurePassword,
                             style: const TextStyle(color: Colors.white),
-                            decoration: _inputDecoration('Password', Icons.lock_outline),
+                            decoration: _inputDecoration('Password', Icons.lock_outline).copyWith(
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  color: const Color(0xFFC9A84C),
+                                  size: 20,
+                                ),
+                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              ),
+                            ),
                             validator: (val) => val!.length < 6 ? 'Min 6 characters' : null,
                             onChanged: (val) => setState(() => password = val),
                           ),

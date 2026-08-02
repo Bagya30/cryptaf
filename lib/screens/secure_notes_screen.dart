@@ -165,6 +165,7 @@ class _SecureNotesScreenState extends State<SecureNotesScreen> {
     final TextEditingController passCtrl = TextEditingController();
     bool isChecking = false;
     String errorMsg = '';
+    bool obscurePass = true;
     
     return await showDialog<bool>(
       context: context,
@@ -179,13 +180,21 @@ class _SecureNotesScreenState extends State<SecureNotesScreen> {
             children: [
               TextField(
                 controller: passCtrl,
-                obscureText: true,
+                obscureText: obscurePass,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Password',
                   hintStyle: const TextStyle(color: Colors.white24),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.05),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscurePass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      color: const Color(0xFFC9A84C),
+                      size: 20,
+                    ),
+                    onPressed: () => setDialogState(() => obscurePass = !obscurePass),
+                  ),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
               ),

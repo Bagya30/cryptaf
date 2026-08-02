@@ -116,25 +116,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           setState(() => _currentIndex = 0);
         }
       },
-      child: Listener(
-        onPointerDown: (_) => _inactivityTimer.reset(),
-        behavior: HitTestBehavior.translucent,
-        child: Scaffold(
-          backgroundColor: _bg,
-          appBar: _buildAppBar(),
-          body: AnimatedBackground(
-            child: IndexedStack(
-              index: bodyIndex,
-              children: [
-                _VaultTab(user: _auth.currentUser, firestore: _firestore),
-                NomineeScreen(userId: uid, isTab: true),
-                const PasswordManagerScreen(isTab: true),
-                const ProfileScreen(isTab: true),
-              ],
-            ),
+      child: Scaffold(
+        backgroundColor: _bg,
+        appBar: _buildAppBar(),
+        body: AnimatedBackground(
+          child: IndexedStack(
+            index: bodyIndex,
+            children: [
+              _VaultTab(user: _auth.currentUser, firestore: _firestore),
+              NomineeScreen(userId: uid, isTab: true),
+              const PasswordManagerScreen(isTab: true),
+              const ProfileScreen(isTab: true),
+            ],
           ),
-          bottomNavigationBar: _buildBottomNav(),
         ),
+        bottomNavigationBar: _buildBottomNav(),
       ),
     );
   }

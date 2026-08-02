@@ -69,6 +69,7 @@ class ScanScreenState extends State<ScanScreen> {
 
   void _showCategorySelection() {
     final TextEditingController passwordController = TextEditingController();
+    bool obscureScanPass = true;
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF141414),
@@ -121,13 +122,21 @@ class ScanScreenState extends State<ScanScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: passwordController,
-                    obscureText: true,
+                    obscureText: obscureScanPass,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Enter vault password',
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.05),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscureScanPass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          color: const Color(0xFFC9A84C),
+                          size: 20,
+                        ),
+                        onPressed: () => setModalState(() => obscureScanPass = !obscureScanPass),
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: const Color(0xFFC9A84C).withOpacity(0.4)),

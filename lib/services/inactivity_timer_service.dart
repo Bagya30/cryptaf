@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cryptaf/screens/login_screen.dart';
 
 class InactivityTimerService {
+  static final InactivityTimerService _instance = InactivityTimerService._internal();
+  factory InactivityTimerService() => _instance;
+  InactivityTimerService._internal();
   Timer? _inactivityTimer;
   Timer? _countdownTimer;
   BuildContext? _context;

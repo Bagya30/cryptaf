@@ -51,6 +51,7 @@ class FileViewScreenState extends State<FileViewScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isDecrypting = false;
+  bool _obscurePassword = true;
   late String _sessionId;
   late String _currentCategory;
   late String _currentName;
@@ -689,7 +690,7 @@ class FileViewScreenState extends State<FileViewScreen> {
                       const SizedBox(height: 16),
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         style: TextStyle(color: textColor),
                         decoration: InputDecoration(
                           hintText: 'Enter vault password',
@@ -697,6 +698,14 @@ class FileViewScreenState extends State<FileViewScreen> {
                           filled: true,
                           fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
                           prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFC9A84C)),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: const Color(0xFFC9A84C),
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,

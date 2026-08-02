@@ -12,7 +12,8 @@ import 'package:cryptaf/widgets/solid_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NomineePortalScreen extends StatefulWidget {
-  const NomineePortalScreen({super.key});
+  final String? vaultOwnerId;
+  const NomineePortalScreen({super.key, this.vaultOwnerId});
 
   @override
   State<NomineePortalScreen> createState() => _NomineePortalScreenState();
@@ -51,33 +52,63 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
     });
 
     try {
-      // 1. Query Firestore Collection Group to find if this email is a nominee anywhere
-      final nomineeQuery = await FirebaseFirestore.instance
-          .collectionGroup('nominees')
-          .where('email', isEqualTo: email)
-          .get();
-
-      if (nomineeQuery.docs.isEmpty) {
-        throw Exception('You are not registered as a nominee for any Cryptaf vault.');
-      }
-
-      // Check if any matching vault owner has emergency enabled and status is expired
       List<Map<String, dynamic>> temporaryVaults = [];
-      for (var doc in nomineeQuery.docs) {
-        final parentRef = doc.reference.parent.parent;
-        if (parentRef != null) {
-          final userDoc = await parentRef.get();
-          if (userDoc.exists) {
-            final userData = userDoc.data();
-            final isEnabled = userData?['emergencyEnabled'] ?? false;
-            final status = userData?['emergencyStatus'] ?? 'disabled';
 
-            if (isEnabled && status == 'expired') {
-              temporaryVaults.add({
-                'uid': userDoc.id,
-                'email': userData?['email'] ?? 'User Vault',
-                'name': userData?['name'] ?? 'Cryptaf User',
-              });
+      if (widget.vaultOwnerId != null && widget.vaultOwnerId!.isNotEmpty) {
+        // 1. Specific vault check
+        final nomineeDocs = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.vaultOwnerId)
+            .collection('nominees')
+            .where('email', isEqualTo: email)
+            .get();
+
+        if (nomineeDocs.docs.isEmpty) {
+          throw Exception('You are not registered as a nominee for this specific vault.');
+        }
+
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(widget.vaultOwnerId).get();
+        if (userDoc.exists) {
+          final userData = userDoc.data();
+          final isEnabled = userData?['emergencyEnabled'] ?? false;
+          final status = userData?['emergencyStatus'] ?? 'disabled';
+
+          if (isEnabled && status == 'expired') {
+            temporaryVaults.add({
+              'uid': userDoc.id,
+              'email': userData?['email'] ?? 'User Vault',
+              'name': userData?['name'] ?? 'Cryptaf User',
+            });
+          }
+        }
+      } else {
+        // 1b. Fallback global search
+        final nomineeQuery = await FirebaseFirestore.instance
+            .collectionGroup('nominees')
+            .where('email', isEqualTo: email)
+            .get();
+
+        if (nomineeQuery.docs.isEmpty) {
+          throw Exception('You are not registered as a nominee for any Cryptaf vault.');
+        }
+
+        // Check if any matching vault owner has emergency enabled and status is expired
+        for (var doc in nomineeQuery.docs) {
+          final parentRef = doc.reference.parent.parent;
+          if (parentRef != null) {
+            final userDoc = await parentRef.get();
+            if (userDoc.exists) {
+              final userData = userDoc.data();
+              final isEnabled = userData?['emergencyEnabled'] ?? false;
+              final status = userData?['emergencyStatus'] ?? 'disabled';
+
+              if (isEnabled && status == 'expired') {
+                temporaryVaults.add({
+                  'uid': userDoc.id,
+                  'email': userData?['email'] ?? 'User Vault',
+                  'name': userData?['name'] ?? 'Cryptaf User',
+                });
+              }
             }
           }
         }
@@ -90,29 +121,24 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
       // Generate 6-digit OTP
       final randomOtp = (100000 + Random.secure().nextInt(900000)).toString();
 
-      // Send via EmailJS
-      final now = DateTime.now();
-      final timeStr = "${now.hour}:${now.minute.toString().padLeft(2, '0')} on ${now.day}/${now.month}/${now.year}";
-      final message = "Your verification OTP for the Cryptaf Nominee Portal is $randomOtp. This OTP is valid for 10 minutes.";
-
+      // Send via EmailJS (Using the proven DEFAULT template from Add Nominee flow to ensure delivery)
       final response = await http.post(
         Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
-          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
+          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_DEFAULT'] ?? '',
           'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
           'template_params': {
             'email': email,
-            'time': timeStr,
-            'message': message,
             'passcode': randomOtp,
+            'time': '10 minutes',
           },
         }),
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode != 200) {
-        throw Exception('Failed to send OTP email via server.');
+        throw Exception('Failed to send OTP email via server. Status: ${response.statusCode}');
       }
 
       setState(() {
@@ -129,7 +155,13 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+            duration: const Duration(seconds: 6),
+          ),
         );
       }
     } finally {
@@ -216,77 +248,93 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
     // Ask for password
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0A0A0A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white12)),
-        title: Text('Decrypt $name', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Enter the vault decryption password provided by the owner.',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _decryptPasswordController,
-              obscureText: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Decryption Password',
-                hintStyle: const TextStyle(color: Colors.white24),
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          bool obscureDecryptPass = true;
+          return AlertDialog(
+            backgroundColor: const Color(0xFF0A0A0A),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white12)),
+            title: Text('Decrypt $name', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            content: StatefulBuilder(
+              builder: (context, setInnerState) => Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Enter the vault decryption password provided by the owner.',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _decryptPasswordController,
+                    obscureText: obscureDecryptPass,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Decryption Password',
+                      hintStyle: const TextStyle(color: Colors.white24),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.05),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscureDecryptPass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          color: const Color(0xFFC9A84C),
+                          size: 20,
+                        ),
+                        onPressed: () => setInnerState(() => obscureDecryptPass = !obscureDecryptPass),
+                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _decryptPasswordController.clear();
-            },
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-          ),
-          TextButton(
-            onPressed: () async {
-              final password = _decryptPasswordController.text.trim();
-              if (password.isEmpty) return;
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _decryptPasswordController.clear();
+                },
+                child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final password = _decryptPasswordController.text.trim();
+                  if (password.isEmpty) return;
 
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Downloading and decrypting...')),
-              );
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Downloading and decrypting...')),
+                  );
 
-              try {
-                final res = await http.get(Uri.parse(downloadUrl));
-                if (res.statusCode != 200) throw Exception('Download failed');
+                  try {
+                    final res = await http.get(Uri.parse(downloadUrl));
+                    if (res.statusCode != 200) throw Exception('Download failed');
 
-                final key = _crypto.deriveKey(password, salt!);
-                final decBytes = _crypto.decryptFile(res.bodyBytes, key, ivBase64: iv);
+                    final key = _crypto.deriveKey(password, salt!);
+                    final decBytes = _crypto.decryptFile(res.bodyBytes, key, ivBase64: iv);
 
-                // Save or open decrypted bytes
-                final dataUri = 'data:application/octet-stream;base64,${base64.encode(decBytes)}';
-                await launchUrl(Uri.parse(dataUri));
-              } catch (e) {
-                if (!mounted) return;
-                // ignore: use_build_context_synchronously
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Decryption failed. Incorrect password.'), backgroundColor: Colors.redAccent),
-                );
-              } finally {
-                _decryptPasswordController.clear();
-              }
-            },
-            child: const Text('Decrypt', style: TextStyle(color: _gold, fontWeight: FontWeight.bold)),
-          ),
-        ],
+                    // Save or open decrypted bytes
+                    final dataUri = 'data:application/octet-stream;base64,${base64.encode(decBytes)}';
+                    await launchUrl(Uri.parse(dataUri));
+                  } catch (e) {
+                    if (!mounted) return;
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Decryption failed. Incorrect password.'), backgroundColor: Colors.redAccent),
+                    );
+                  } finally {
+                    _decryptPasswordController.clear();
+                  }
+                },
+                child: const Text('Decrypt', style: TextStyle(color: _gold, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
