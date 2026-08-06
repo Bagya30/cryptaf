@@ -5,10 +5,14 @@ async function checkEmergencyStatus() {
 
   // Initialize Firebase Admin
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    } else {
+      admin.initializeApp();
+    }
     console.log('Firebase Admin initialized successfully.');
   } catch (error) {
     console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT or initialize Firebase Admin:', error);
@@ -25,6 +29,8 @@ async function checkEmergencyStatus() {
   if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_USER_ID || !EMAILJS_PRIVATE_KEY) {
     console.warn('EmailJS environment variables (including private key) are missing. Emails will not be sent.');
   }
+
+  let hasErrors = false;
 
   try {
     const usersRef = db.collection('users');
@@ -107,9 +113,11 @@ async function checkEmergencyStatus() {
                 } else {
                   const text = await response.text();
                   console.error(`Failed to send email to ${nomineeEmail}: ${response.status} ${response.statusText} - ${text}`);
+                  hasErrors = true;
                 }
               } catch (emailErr) {
                 console.error(`Exception sending email to ${nomineeEmail}:`, emailErr);
+                hasErrors = true;
               }
             } else {
                console.log(`Skipping email for nominee ${nomineeDoc.id} - missing email or EmailJS config`);
@@ -121,6 +129,9 @@ async function checkEmergencyStatus() {
       }
     }
     console.log('Emergency Status Check complete.');
+    if (hasErrors) {
+      throw new Error('One or more emails failed to send.');
+    }
   } catch (error) {
     console.error('Error querying users or processing data:', error);
     process.exit(1);
