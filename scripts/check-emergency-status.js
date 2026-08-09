@@ -1,131 +1,171 @@
 const admin = require('firebase-admin');
 
-async function checkEmergencyStatus() {
+async function checkEmergencyStatus(dbMock = null, fetchMock = null) {
   console.log('Starting Emergency Status Check...');
 
-  // Initialize Firebase Admin
-  try {
-    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-    } else {
-      admin.initializeApp();
+  let db = dbMock;
+  let customFetch = fetchMock || (typeof fetch !== 'undefined' ? fetch : null);
+
+  if (!dbMock) {
+    try {
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        if (admin.apps.length === 0) {
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+          });
+        }
+      } else {
+        if (admin.apps.length === 0) {
+          admin.initializeApp();
+        }
+      }
+      console.log('Firebase Admin initialized successfully.');
+      db = admin.firestore();
+    } catch (error) {
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT or initialize Firebase Admin:', error);
+      process.exit(1);
     }
-    console.log('Firebase Admin initialized successfully.');
-  } catch (error) {
-    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT or initialize Firebase Admin:', error);
-    process.exit(1);
   }
 
-  const db = admin.firestore();
-  
-  const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID;
-  const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID_DEFAULT;
-  const EMAILJS_USER_ID = process.env.EMAILJS_USER_ID;
-  const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY;
+  const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID || 'mock_service_id';
+  const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID_DEFAULT || 'mock_template_id';
+  const EMAILJS_USER_ID = process.env.EMAILJS_USER_ID || 'mock_user_id';
+  const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY || 'mock_private_key';
 
-  if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_USER_ID || !EMAILJS_PRIVATE_KEY) {
-    console.warn('EmailJS environment variables (including private key) are missing. Emails will not be sent.');
+  if (!process.env.EMAILJS_SERVICE_ID && !fetchMock) {
+    console.warn('EmailJS environment variables are missing. Emails will not be sent.');
   }
 
   let hasErrors = false;
 
   try {
     const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('emergencyEnabled', '==', true).get();
+    const snapshot = await usersRef.get();
 
     if (snapshot.empty) {
-      console.log('No users with emergency enabled found.');
+      console.log('No users found.');
       return;
     }
 
     const now = new Date();
-    console.log(`Checking ${snapshot.size} users with emergencyEnabled...`);
+    console.log(`Checking ${snapshot.size} total users...`);
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
-      const lastActiveTs = data.lastActiveTime;
-      const durationHours = data.emergencyDurationHours || 168; // default to 7 days
-      const currentStatus = data.emergencyStatus;
       const userName = data.name || data.email || 'User';
 
-      if (!lastActiveTs) {
-        console.log(`User ${doc.id} has no lastActiveTime. Skipping.`);
+      // Load authoritative info document
+      const infoRef = doc.ref.collection('publicMeta').doc('info');
+      const infoSnapshot = await infoRef.get();
+
+      if (!infoSnapshot.exists) {
         continue;
       }
 
-      const lastActiveTime = lastActiveTs.toDate();
-      const diffMs = now.getTime() - lastActiveTime.getTime();
-      const diffHours = diffMs / (1000 * 60 * 60);
+      const infoData = infoSnapshot.data();
 
-      console.log(`User ${doc.id} - Inactive for ${diffHours.toFixed(2)} hours (Threshold: ${durationHours} hours). Status: ${currentStatus}`);
+      if (infoData.emergencyEnabled !== true) {
+        console.log(`User ${doc.id} - emergencyEnabled is false or missing. Skipping...`);
+        continue;
+      }
 
-      if (diffHours >= durationHours) {
-        if (currentStatus !== 'expired') {
-          console.log(`User ${doc.id} timer EXPIRED. Updating status to "expired".`);
-          
-          // 1. Update status in Firestore
-          await doc.ref.update({
-            emergencyStatus: 'expired'
-          });
-          console.log(`Updated user ${doc.id} emergencyStatus to 'expired'.`);
+      if (!infoData.emergencyDeadline) {
+        console.log(`User ${doc.id} - Missing emergencyDeadline. Skipping...`);
+        continue;
+      }
 
-          // 2. Fetch nominees
-          const nomineesSnapshot = await doc.ref.collection('nominees').get();
-          console.log(`Found ${nomineesSnapshot.size} nominees for user ${doc.id}.`);
+      let deadlineDate;
+      if (infoData.emergencyDeadline.toDate) {
+         deadlineDate = infoData.emergencyDeadline.toDate();
+      } else {
+         // Mock timestamp fallback
+         deadlineDate = new Date(infoData.emergencyDeadline.seconds * 1000);
+      }
+      
+      const deadlineEpoch = deadlineDate.getTime();
+      const isExpired = now >= deadlineDate;
 
-          // 3. Send email to each nominee
-          for (const nomineeDoc of nomineesSnapshot.docs) {
-            const nomineeData = nomineeDoc.data();
-            const nomineeEmail = nomineeData.email;
+      console.log(`User ${doc.id} - Deadline: ${deadlineDate.toISOString()}. Now: ${now.toISOString()}.`);
+      
+      if (isExpired) {
+        console.log(`User ${doc.id} timer EXPIRED.`);
+        
+        // 1. Fetch nominees
+        const nomineesSnapshot = await doc.ref.collection('nominees').get();
+        console.log(`Found ${nomineesSnapshot.size} nominees for user ${doc.id}.`);
 
-            if (nomineeEmail && EMAILJS_SERVICE_ID) {
-              console.log(`Sending email to nominee: ${nomineeEmail}`);
-              
-              const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')} on ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-              const message = `The vault owner (${userName}) has been inactive and emergency access has been granted. Visit https://cryptaf-36296.web.app/nominee-access?vaultOwner=${doc.id} to request access.`;
-              
-              const payload = {
-                service_id: EMAILJS_SERVICE_ID,
-                template_id: EMAILJS_TEMPLATE_ID,
-                user_id: EMAILJS_USER_ID,
-                accessToken: EMAILJS_PRIVATE_KEY,
-                template_params: {
-                  email: nomineeEmail,
-                  time: timeStr,
-                  message: message,
-                  passcode: message
-                }
-              };
+        // 2. Send email to each nominee (with per-nominee retry tracking)
+        for (const nomineeDoc of nomineesSnapshot.docs) {
+          const nomineeData = nomineeDoc.data();
+          const nomineeEmail = nomineeData.email;
+          const notifiedMap = nomineeData.notifiedDeadlines || {};
 
-              try {
-                // Node 18+ has built-in fetch
-                const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload)
-                });
-                
-                if (response.ok) {
-                  console.log(`Successfully sent email to ${nomineeEmail}.`);
-                } else {
-                  const text = await response.text();
-                  console.error(`Failed to send email to ${nomineeEmail}: ${response.status} ${response.statusText} - ${text}`);
-                  hasErrors = true;
-                }
-              } catch (emailErr) {
-                console.error(`Exception sending email to ${nomineeEmail}:`, emailErr);
-                hasErrors = true;
-              }
-            } else {
-               console.log(`Skipping email for nominee ${nomineeDoc.id} - missing email or EmailJS config`);
-            }
+          // Idempotency check: has this nominee already been notified for THIS EXACT deadline?
+          if (notifiedMap[deadlineEpoch] === true) {
+            console.log(`User ${doc.id} - Nominee ${nomineeEmail} already notified for deadline ${deadlineEpoch}. Skipping.`);
+            continue;
           }
-        } else {
-          console.log(`User ${doc.id} is already expired. No action needed.`);
+
+          if (nomineeEmail && EMAILJS_SERVICE_ID) {
+            console.log(`Sending email to nominee: ${nomineeEmail}`);
+            
+            const message = `The vault owner (${userName}) has been inactive and emergency access has been granted. Eligible inherited files are now available. Visit https://cryptaf-36296.web.app/nominee-access?vaultOwner=${doc.id} to request access.`;
+            
+            const payload = {
+              service_id: EMAILJS_SERVICE_ID,
+              template_id: EMAILJS_TEMPLATE_ID,
+              user_id: EMAILJS_USER_ID,
+              accessToken: EMAILJS_PRIVATE_KEY,
+              template_params: {
+                email: nomineeEmail,
+                message: message,
+                passcode: message
+              }
+            };
+
+            try {
+              if (!customFetch) throw new Error('Fetch API not available');
+              
+              const response = await customFetch('https://api.emailjs.com/api/v1.0/email/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              
+              if (response.ok) {
+                console.log(`Successfully sent email to ${nomineeEmail}.`);
+                // Mark success for this specific deadline
+                await nomineeDoc.ref.set({
+                  notifiedDeadlines: {
+                    [deadlineEpoch]: true
+                  }
+                }, { merge: true });
+                console.log(`Recorded notification success for nominee ${nomineeEmail}.`);
+              } else {
+                let text = '';
+                if (response.text) text = await response.text();
+                console.error(`Failed to send email to ${nomineeEmail}: ${response.status} - ${text}`);
+                hasErrors = true;
+                // DO NOT write success marker, allows retry on next run.
+              }
+            } catch (emailErr) {
+              console.error(`Exception sending email to ${nomineeEmail}:`, emailErr);
+              hasErrors = true;
+              // DO NOT write success marker, allows retry on next run.
+            }
+          } else {
+             console.log(`Skipping email for nominee ${nomineeDoc.id} - missing email`);
+          }
         }
+        
+        // Update emergencyStatus conditionally (informational only)
+        if (infoData.emergencyStatus !== 'expired') {
+          await infoRef.set({ emergencyStatus: 'expired' }, { merge: true });
+        }
+
+      } else {
+         console.log(`User ${doc.id} timer has NOT expired yet.`);
       }
     }
     console.log('Emergency Status Check complete.');
@@ -134,8 +174,15 @@ async function checkEmergencyStatus() {
     }
   } catch (error) {
     console.error('Error querying users or processing data:', error);
-    process.exit(1);
+    if (!dbMock) {
+       process.exit(1);
+    }
+    throw error;
   }
 }
 
-checkEmergencyStatus();
+if (require.main === module) {
+  checkEmergencyStatus();
+}
+
+module.exports = { checkEmergencyStatus };

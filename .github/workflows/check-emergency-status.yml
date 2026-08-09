@@ -5,6 +5,10 @@ on:
     - cron: '0 * * * *' # Runs every hour
   workflow_dispatch: # Allows manual triggering
 
+concurrency:
+  group: "emergency-check"
+  cancel-in-progress: false
+
 jobs:
   check-status:
     runs-on: ubuntu-latest
