@@ -22,8 +22,18 @@ class _NomineeScreenState extends State<NomineeScreen> {
   static const _bg = Color(0xFF0A0A0A);
 
   final FirestoreService _firestore = FirestoreService();
+  bool _hasMigrated = false;
 
-
+  @override
+  void initState() {
+    super.initState();
+    if (!_hasMigrated) {
+      _hasMigrated = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _firestore.migrateLegacyNominees();
+      });
+    }
+  }
 
   void _goToAdd() {
     Navigator.push(
@@ -49,8 +59,11 @@ class _NomineeScreenState extends State<NomineeScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF0A0A0A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white12)),
-        title: const Text('Remove Nominee', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Colors.white12)),
+        title: const Text('Remove Nominee',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: Text(
           'Remove $name? They will no longer have emergency vault access.',
           style: const TextStyle(color: Colors.white70),
@@ -58,17 +71,52 @@ class _NomineeScreenState extends State<NomineeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Remove', style: TextStyle(color: Colors.redAccent)),
+            child:
+                const Text('Remove', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
     );
     if (confirm == true) {
       await _firestore.removeNominee(id, name);
+    }
+  }
+
+  Future<void> _confirmResetBinding(String email, String name) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0A0A0A),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Colors.white12)),
+        title: const Text('Reset Access Binding',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Reset binding for $name? The current Firebase account linked to this email will be unlinked, allowing a new device/account to claim this nominee access.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reset',
+                style: TextStyle(color: Colors.orangeAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await _firestore.resetNomineeBinding(email);
     }
   }
 
@@ -84,7 +132,8 @@ class _NomineeScreenState extends State<NomineeScreen> {
               children: [
                 CircularProgressIndicator(color: _gold),
                 SizedBox(height: 20),
-                Text('Fetching nominees...', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                Text('Fetching nominees...',
+                    style: TextStyle(color: Colors.white54, fontSize: 13)),
               ],
             ),
           );
@@ -92,15 +141,22 @@ class _NomineeScreenState extends State<NomineeScreen> {
 
         if (snapshot.hasError) {
           return Center(
-            child: Text('Error loading nominees: ${snapshot.error}', style: const TextStyle(color: Colors.redAccent)),
+            child: Text('Error loading nominees: ${snapshot.error}',
+                style: const TextStyle(color: Colors.redAccent)),
           );
         }
 
         final rawDocs = snapshot.data?.docs ?? [];
-        final docs = rawDocs.toList();
+        final docs = rawDocs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>?;
+          return data?['migratedToCanonical'] != true;
+        }).toList();
+
         docs.sort((a, b) {
-          final pA = (a.data() as Map<String, dynamic>)['priority'] as int? ?? 999;
-          final pB = (b.data() as Map<String, dynamic>)['priority'] as int? ?? 999;
+          final pA =
+              (a.data() as Map<String, dynamic>)['priority'] as int? ?? 999;
+          final pB =
+              (b.data() as Map<String, dynamic>)['priority'] as int? ?? 999;
           if (pA != pB) return pA.compareTo(pB);
           return a.id.compareTo(b.id);
         });
@@ -115,14 +171,21 @@ class _NomineeScreenState extends State<NomineeScreen> {
                 children: [
                   const Text(
                     'Trusted Nominees',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (docs.length >= 5 ? Colors.redAccent : _gold).withOpacity(0.15),
+                      color: (docs.length >= 5 ? Colors.redAccent : _gold)
+                          .withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: (docs.length >= 5 ? Colors.redAccent : _gold).withOpacity(0.4)),
+                      border: Border.all(
+                          color: (docs.length >= 5 ? Colors.redAccent : _gold)
+                              .withOpacity(0.4)),
                     ),
                     child: Text(
                       '${docs.length} / 5',
@@ -145,7 +208,8 @@ class _NomineeScreenState extends State<NomineeScreen> {
                 child: docs.isEmpty
                     ? _buildEmptyState()
                     : ReorderableListView.builder(
-                        proxyDecorator: (child, index, animation) => Material(color: Colors.transparent, child: child),
+                        proxyDecorator: (child, index, animation) =>
+                            Material(color: Colors.transparent, child: child),
                         itemCount: docs.length,
                         onReorder: (oldIndex, newIndex) async {
                           if (newIndex > oldIndex) newIndex -= 1;
@@ -156,13 +220,18 @@ class _NomineeScreenState extends State<NomineeScreen> {
                           if (user != null) {
                             final batch = FirebaseFirestore.instance.batch();
                             for (int i = 0; i < docs.length; i++) {
-                              final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid).collection('nominees').doc(docs[i].id);
+                              final docRef = FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(user.uid)
+                                  .collection('nominees')
+                                  .doc(docs[i].id);
                               batch.update(docRef, {'priority': i + 1});
                             }
                             await batch.commit();
                           }
                         },
-                        itemBuilder: (_, i) => _buildNomineeCard(docs[i], i + 1, ValueKey(docs[i].id)),
+                        itemBuilder: (_, i) => _buildNomineeCard(
+                            docs[i], i + 1, ValueKey(docs[i].id)),
                       ),
               ),
             ],
@@ -207,10 +276,12 @@ class _NomineeScreenState extends State<NomineeScreen> {
           backgroundColor: count >= 5 ? Colors.white10 : _gold,
           onPressed: count >= 5
               ? () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Nominee limit reached (Max 5)')),
+                    const SnackBar(
+                        content: Text('Nominee limit reached (Max 5)')),
                   )
               : _goToAdd,
-          icon: Icon(Icons.person_add, color: count >= 5 ? Colors.white24 : const Color(0xFF0A0A0A)),
+          icon: Icon(Icons.person_add,
+              color: count >= 5 ? Colors.white24 : const Color(0xFF0A0A0A)),
           label: Text(
             'Add Nominee',
             style: TextStyle(
@@ -228,11 +299,14 @@ class _NomineeScreenState extends State<NomineeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.people_outline, size: 80, color: Colors.white.withOpacity(0.05)),
+          Icon(Icons.people_outline,
+              size: 80, color: Colors.white.withOpacity(0.05)),
           const SizedBox(height: 16),
-          const Text('No nominees added yet', style: TextStyle(color: Colors.white38, fontSize: 16)),
+          const Text('No nominees added yet',
+              style: TextStyle(color: Colors.white38, fontSize: 16)),
           const SizedBox(height: 8),
-          const Text('Tap "Add Nominee" below to get started', style: TextStyle(color: Colors.white24, fontSize: 13)),
+          const Text('Tap "Add Nominee" below to get started',
+              style: TextStyle(color: Colors.white24, fontSize: 13)),
         ],
       ),
     );
@@ -243,7 +317,8 @@ class _NomineeScreenState extends State<NomineeScreen> {
     final name = data['name'] ?? '—';
     final relationship = data['relationship'] ?? 'Family';
 //     final trustLevel = data['trustLevel'] ?? 'Secondary';
-    final updatedAt = (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final updatedAt =
+        (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
     final emailVerified = data['emailVerified'] ?? false;
     final fullyVerified = emailVerified;
 
@@ -264,9 +339,13 @@ class _NomineeScreenState extends State<NomineeScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFC9A84C).withOpacity(0.4), width: 1.5),
+        border: Border.all(
+            color: const Color(0xFFC9A84C).withOpacity(0.4), width: 1.5),
         boxShadow: [
-          BoxShadow(color: const Color(0xFFC9A84C).withOpacity(0.15), blurRadius: 15, spreadRadius: 1),
+          BoxShadow(
+              color: const Color(0xFFC9A84C).withOpacity(0.15),
+              blurRadius: 15,
+              spreadRadius: 1),
         ],
       ),
       child: Column(
@@ -302,7 +381,11 @@ class _NomineeScreenState extends State<NomineeScreen> {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(name, style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                          child: Text(name,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold)),
                         ),
                         if (fullyVerified) ...[
                           const SizedBox(width: 6),
@@ -311,7 +394,9 @@ class _NomineeScreenState extends State<NomineeScreen> {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(relationship, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                    Text(relationship,
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 13)),
                   ],
                 ),
               ),
@@ -321,7 +406,8 @@ class _NomineeScreenState extends State<NomineeScreen> {
                   _priorityBadge(priority),
                   const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: trustColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(4),
@@ -329,7 +415,10 @@ class _NomineeScreenState extends State<NomineeScreen> {
                     ),
                     child: Text(
                       trustLabel,
-                      style: TextStyle(color: trustColor, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: trustColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -344,12 +433,17 @@ class _NomineeScreenState extends State<NomineeScreen> {
               const Spacer(),
               if (fullyVerified)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: _gold.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text('FULLY VERIFIED', style: TextStyle(color: _gold, fontSize: 10, fontWeight: FontWeight.bold)),
+                  child: const Text('FULLY VERIFIED',
+                      style: TextStyle(
+                          color: _gold,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold)),
                 ),
             ],
           ),
@@ -360,16 +454,25 @@ class _NomineeScreenState extends State<NomineeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, color: Colors.white38, size: 20),
-                    onPressed: () => _goToEdit(doc),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-                    onPressed: () => _confirmDelete(doc.id, name),
-                  ),
-                ],
+              if (data['uid'] != null)
+                IconButton(
+                  tooltip: 'Reset Access Binding',
+                  icon: const Icon(Icons.link_off,
+                      color: Colors.orangeAccent, size: 20),
+                  onPressed: () => _confirmResetBinding(doc.id, name),
+                ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined,
+                    color: Colors.white38, size: 20),
+                onPressed: () => _goToEdit(doc),
               ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline,
+                    color: Colors.redAccent, size: 20),
+                onPressed: () => _confirmDelete(doc.id, name),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
           Align(
             alignment: Alignment.centerLeft,
@@ -389,7 +492,9 @@ class _NomineeScreenState extends State<NomineeScreen> {
       children: [
         Icon(icon, size: 12, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w500)),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 10, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -404,7 +509,8 @@ class _NomineeScreenState extends State<NomineeScreen> {
       ),
       child: Text(
         'PRIORITY $priority',
-        style: const TextStyle(color: _gold, fontSize: 9, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+            color: _gold, fontSize: 9, fontWeight: FontWeight.bold),
       ),
     );
   }

@@ -96,9 +96,19 @@ async function checkEmergencyStatus(dbMock = null, fetchMock = null) {
         console.log(`Found ${nomineesSnapshot.size} nominees for user ${doc.id}.`);
 
         // 2. Send email to each nominee (with per-nominee retry tracking)
+        const processedEmails = new Set();
+        
         for (const nomineeDoc of nomineesSnapshot.docs) {
           const nomineeData = nomineeDoc.data();
+          if (nomineeData.migratedToCanonical === true) continue;
+          
           const nomineeEmail = nomineeData.email;
+          if (!nomineeEmail) continue;
+          
+          const normalizedEmail = nomineeEmail.toLowerCase().trim();
+          if (processedEmails.has(normalizedEmail)) continue;
+          processedEmails.add(normalizedEmail);
+          
           const notifiedMap = nomineeData.notifiedDeadlines || {};
 
           // Idempotency check: has this nominee already been notified for THIS EXACT deadline?
@@ -107,7 +117,7 @@ async function checkEmergencyStatus(dbMock = null, fetchMock = null) {
             continue;
           }
 
-          if (nomineeEmail && EMAILJS_SERVICE_ID) {
+          if (EMAILJS_SERVICE_ID) {
             console.log(`Sending email to nominee: ${nomineeEmail}`);
             
             const message = `The vault owner (${userName}) has been inactive and emergency access has been granted. Eligible inherited files are now available. Visit https://cryptaf-36296.web.app/nominee-access?vaultOwner=${doc.id} to request access.`;

@@ -160,7 +160,32 @@ async function runTests() {
   assert.strictEqual(nomB._updates.length, 0, 'nomB should NOT get success marker');
   assert.strictEqual(nomC._updates.length, 1, 'nomC should get success marker');
 
-  console.log('✅ Partial failure tests passed!');
+  // --- TEST: SKIP MIGRATED AND DEDUPLICATE ---
+  let fetchCountDedupe = 0;
+  const nomMigrated = new MockDocRef('random123', { email: 'dup@test.com', migratedToCanonical: true });
+  const nomDup1 = new MockDocRef('dup1', { email: 'dup@test.com' });
+  const nomDup2 = new MockDocRef('dup2', { email: 'DUP@test.com ' }); // spaces and caps
+  
+  const dedupeDb = new MockFirestore([
+    new MockDocRef('userDedupe', { name: 'Dedupe' }, {
+      publicMeta: new MockCollection([
+        new MockDocRef('info', { emergencyEnabled: true, emergencyDeadline: { seconds: pastMs / 1000 } })
+      ]),
+      nominees: new MockCollection([nomMigrated, nomDup1, nomDup2])
+    })
+  ]);
+
+  const fetchDedupeMock = async () => {
+    fetchCountDedupe++;
+    return { ok: true, status: 200, text: async () => 'OK' };
+  };
+
+  await checkEmergencyStatus(dedupeDb, fetchDedupeMock);
+  
+  assert.strictEqual(fetchCountDedupe, 1, 'Should only send exactly one email after deduplication and skipping migrated');
+
+  console.log('✅ Deduplication tests passed!');
+
   console.log('\n🎉 ALL MOCK TESTS PASSED SUCCESSFULLY!');
 }
 
