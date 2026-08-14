@@ -5,14 +5,26 @@ async function testEmergencyTrigger() {
 
   // Initialize Firebase Admin
   try {
-    const fs = require('fs');
-    const serviceAccount = JSON.parse(fs.readFileSync('C:\\Users\\BAGYALAKSHMI\\Downloads\\cryptaf-36296-firebase-adminsdk-fbsvc-308fa2e013.json', 'utf8'));
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    } else {
+      const saPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+      if (saPath) {
+        const fs = require('fs');
+        const serviceAccount = JSON.parse(fs.readFileSync(saPath, 'utf8'));
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+      } else {
+        admin.initializeApp();
+      }
+    }
     console.log('Firebase Admin initialized successfully.');
   } catch (error) {
-    console.error('Failed to parse local service account JSON or initialize Firebase Admin:', error);
+    console.error('Failed to initialize Firebase Admin:', error);
     process.exit(1);
   }
 
@@ -27,8 +39,11 @@ async function testEmergencyTrigger() {
     console.warn('EmailJS environment variables (including private key) are missing. Emails will not be sent.');
   }
 
-  const userId = 'BVimd4RYK9Zdv77ju5SuyhV6nRx1';
+  // Set user ID via environment variable or default test value
+  const TARGET_TEST_UID = process.env.TEST_TARGET_UID || 'BVimd4RYK9Zdv77ju5SuyhV6nRx1';
+  const userId = TARGET_TEST_UID;
   let originalDuration = 72;
+  let originalStatus = 'active';
 
   try {
     const userRef = db.collection('users').doc(userId);
@@ -41,12 +56,14 @@ async function testEmergencyTrigger() {
 
     const data = doc.data();
     originalDuration = data.emergencyDurationHours || 72;
-    console.log(`Step 1: Found user. Original emergencyDurationHours is ${originalDuration}.`);
+    originalStatus = data.emergencyStatus || 'active';
+    console.log(`Step 1: Found user. Original emergencyDurationHours is ${originalDuration}, status is ${originalStatus}.`);
 
-    // Temporarily set to 1
-    console.log(`Step 2: Temporarily setting emergencyDurationHours to 1...`);
+    // Temporarily set to 1 and active
+    console.log(`Step 2: Temporarily setting emergencyDurationHours to 1 and status to active...`);
     await userRef.update({
-      emergencyDurationHours: 1
+      emergencyDurationHours: 1,
+      emergencyStatus: 'active'
     });
 
     // Run the expiry check logic for this specific user
@@ -141,12 +158,13 @@ async function testEmergencyTrigger() {
   } catch (error) {
     console.error('Error during test execution:', error);
   } finally {
-    // Restore the original duration
-    console.log(`Step 4: Restoring original emergencyDurationHours to ${originalDuration}...`);
+    // Restore the original duration and status
+    console.log(`Step 4: Restoring original emergencyDurationHours to ${originalDuration} and status to ${originalStatus}...`);
     try {
       const userRef = db.collection('users').doc(userId);
       await userRef.update({
-        emergencyDurationHours: originalDuration
+        emergencyDurationHours: originalDuration,
+        emergencyStatus: originalStatus
       });
       console.log('Restoration complete.');
     } catch (restoreError) {

@@ -45,3 +45,8 @@ app.*.map.json
 # Environment Variables
 .env
 web/.env
+node_modules
+automation/data/test_data.json
+test_live.js
+dump_logs.js
+scratch/
