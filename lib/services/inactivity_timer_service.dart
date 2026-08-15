@@ -2,22 +2,38 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cryptaf/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class InactivityTimerService {
-  static final InactivityTimerService _instance = InactivityTimerService._internal();
+  static final InactivityTimerService _instance =
+      InactivityTimerService._internal();
   factory InactivityTimerService() => _instance;
   InactivityTimerService._internal();
   Timer? _inactivityTimer;
   Timer? _countdownTimer;
   BuildContext? _context;
   bool _isWarningOpen = false;
+  bool _isStarted = false;
 
   void start(BuildContext context) {
     _context = context;
+    _isStarted = true;
     reset();
   }
 
+  void stop() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _isWarningOpen = false;
+    _isStarted = false;
+    _context = null;
+  }
+
   void reset() {
+    if (!_isStarted) return;
+    if (FirebaseAuth.instance.currentUser == null) return;
     if (_isWarningOpen) return;
 
     _inactivityTimer?.cancel();
@@ -25,6 +41,19 @@ class InactivityTimerService {
 
     // 4 minutes = 240 seconds
     _inactivityTimer = Timer(const Duration(minutes: 4), _showWarningDialog);
+
+    _updateLocalActivity();
+  }
+
+  int _lastLocalUpdateTime = 0;
+  void _updateLocalActivity() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastLocalUpdateTime > 30000) {
+      _lastLocalUpdateTime = now;
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setInt('local_last_active', now);
+      });
+    }
   }
 
   void _showWarningDialog() {
@@ -39,7 +68,8 @@ class InactivityTimerService {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            _countdownTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
+            _countdownTimer ??=
+                Timer.periodic(const Duration(seconds: 1), (timer) {
               if (remainingSeconds > 1) {
                 setDialogState(() {
                   remainingSeconds--;
@@ -58,9 +88,12 @@ class InactivityTimerService {
               ),
               title: const Row(
                 children: [
-                  Icon(Icons.timer_outlined, color: Color(0xFFC9A84C), size: 28),
+                  Icon(Icons.timer_outlined,
+                      color: Color(0xFFC9A84C), size: 28),
                   SizedBox(width: 12),
-                  Text('Inactivity Warning', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text('Inactivity Warning',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                 ],
               ),
               content: Column(
@@ -74,7 +107,11 @@ class InactivityTimerService {
                   const SizedBox(height: 24),
                   Text(
                     '$remainingSeconds s',
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: 2),
+                    style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2),
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -88,11 +125,13 @@ class InactivityTimerService {
                 Center(
                   child: TextButton(
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                       backgroundColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: const Color(0xFFC9A84C).withOpacity(0.5)),
+                        side: BorderSide(
+                            color: const Color(0xFFC9A84C).withOpacity(0.5)),
                       ),
                     ),
                     onPressed: () {
@@ -102,7 +141,11 @@ class InactivityTimerService {
                       Navigator.pop(dialogContext);
                       reset();
                     },
-                    child: const Text('Stay Logged In', style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.bold, fontSize: 16)),
+                    child: const Text('Stay Logged In',
+                        style: TextStyle(
+                            color: Color(0xFFC9A84C),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16)),
                   ),
                 ),
               ],
@@ -133,7 +176,6 @@ class InactivityTimerService {
   }
 
   void dispose() {
-    _inactivityTimer?.cancel();
-    _countdownTimer?.cancel();
+    stop();
   }
 }

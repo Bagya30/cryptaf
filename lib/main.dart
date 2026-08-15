@@ -20,7 +20,8 @@ import 'dart:ui';
 import 'package:cryptaf/services/firestore_service.dart';
 import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:cryptaf/web_url_stub.dart' if (dart.library.html) 'dart:html' as html;
+import 'package:cryptaf/web_url_stub.dart' if (dart.library.html) 'dart:html'
+    as html;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -108,7 +109,7 @@ void main() async {
       return true;
     };
   }
-  
+
   runApp(const CryptafApp());
 }
 
@@ -137,12 +138,28 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
     if (kIsWeb) {
       final currentUrl = html.window.location.href;
       if (currentUrl.contains('/emergency/')) {
-        final rawUid = currentUrl.split('/emergency/').last.split('?').first.split('#').first.split('/').first;
+        final rawUid = currentUrl
+            .split('/emergency/')
+            .last
+            .split('?')
+            .first
+            .split('#')
+            .first
+            .split('/')
+            .first;
         if (rawUid.isNotEmpty) {
           _initialRoute = '/emergency/$rawUid';
         }
       } else if (currentUrl.contains('/share/')) {
-        final rawToken = currentUrl.split('/share/').last.split('?').first.split('#').first.split('/').first;
+        final rawToken = currentUrl
+            .split('/share/')
+            .last
+            .split('?')
+            .first
+            .split('#')
+            .first
+            .split('/')
+            .first;
         if (rawToken.isNotEmpty) {
           _initialRoute = '/share/$rawToken';
         }
@@ -189,7 +206,8 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
         surface: const Color(0xFF0A0A0A),
         secondary: const Color(0xFFC9A84C), // Antique Gold Accent
       ),
-      textTheme: GoogleFonts.oxaniumTextTheme(Theme.of(context).textTheme).apply(
+      textTheme:
+          GoogleFonts.oxaniumTextTheme(Theme.of(context).textTheme).apply(
         bodyColor: Colors.white,
         displayColor: Colors.white,
       ),
@@ -241,14 +259,16 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
             builder: (context) => EmergencyProfileScreen(userId: uid),
           );
         }
-        if (path != null && (path == '/nominee-access' || path.startsWith('/nominee-access'))) {
+        if (path != null &&
+            (path == '/nominee-access' || path.startsWith('/nominee-access'))) {
           String? vaultOwnerId;
           if (path.contains('?')) {
             final uri = Uri.parse(path);
             vaultOwnerId = uri.queryParameters['vaultOwner'];
           }
           return MaterialPageRoute(
-            builder: (context) => NomineePortalScreen(vaultOwnerId: vaultOwnerId),
+            builder: (context) =>
+                NomineePortalScreen(vaultOwnerId: vaultOwnerId),
           );
         }
         return MaterialPageRoute(builder: (context) => const SplashScreen());
@@ -257,22 +277,69 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
   }
 }
 
-class AuthenticationWrapper extends StatelessWidget {
+class AuthenticationWrapper extends StatefulWidget {
   const AuthenticationWrapper({super.key});
 
   @override
+  State<AuthenticationWrapper> createState() => _AuthenticationWrapperState();
+}
+
+class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
+  final AuthService _auth = AuthService();
+  bool _isCheckingFreshness = true;
+  bool _requiresReauth = false;
+  // 1-hour inactivity threshold for cold-start re-authentication.
+  static const int _thresholdMs = 3600000;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFreshness();
+  }
+
+  Future<void> _checkFreshness() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastActive = prefs.getInt('local_last_active') ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    if (lastActive > 0 && (now - lastActive) > _thresholdMs) {
+      _requiresReauth = true;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isCheckingFreshness = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final AuthService auth = AuthService();
-    
-    return StreamBuilder(
-      stream: auth.user,
+    if (_isCheckingFreshness) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Center(
+            child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.secondary)),
+      );
+    }
+
+    return StreamBuilder<User?>(
+      stream: _auth.user,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.secondary)),
+            body: Center(
+                child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.secondary)),
           );
         } else if (snapshot.hasData) {
+          if (_requiresReauth) {
+            return const LoginScreen(
+                message:
+                    'Session expired due to inactivity. Please verify your credentials.');
+          }
           return const DashboardScreen();
         } else {
           return const LoginScreen();
@@ -305,13 +372,16 @@ class GoldShimmerText extends StatefulWidget {
   State<GoldShimmerText> createState() => GoldShimmerTextState();
 }
 
-class GoldShimmerTextState extends State<GoldShimmerText> with SingleTickerProviderStateMixin {
+class GoldShimmerTextState extends State<GoldShimmerText>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3))
+          ..repeat();
   }
 
   @override
@@ -340,7 +410,8 @@ class GoldShimmerTextState extends State<GoldShimmerText> with SingleTickerProvi
           },
           child: Text(
             widget.text,
-            style: widget.style?.copyWith(color: Colors.white) ?? const TextStyle(color: Colors.white),
+            style: widget.style?.copyWith(color: Colors.white) ??
+                const TextStyle(color: Colors.white),
           ),
         );
       },
@@ -360,7 +431,8 @@ class ShareRouteWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: Color(0xFF0A0A0A),
-            body: Center(child: CircularProgressIndicator(color: Color(0xFFC9A84C))),
+            body: Center(
+                child: CircularProgressIndicator(color: Color(0xFFC9A84C))),
           );
         }
         if (snapshot.hasData && snapshot.data != null) {
@@ -370,12 +442,14 @@ class ShareRouteWrapper extends StatelessWidget {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('pending_share_token', token);
             if (context.mounted) {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()));
             }
           });
           return const Scaffold(
             backgroundColor: Color(0xFF0A0A0A),
-            body: Center(child: CircularProgressIndicator(color: Color(0xFFC9A84C))),
+            body: Center(
+                child: CircularProgressIndicator(color: Color(0xFFC9A84C))),
           );
         }
       },
@@ -389,10 +463,10 @@ class ActivityObserver extends NavigatorObserver {
     super.didPush(route, previousRoute);
     FirestoreService().updateLastActive();
   }
+
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
     FirestoreService().updateLastActive();
   }
 }
-
