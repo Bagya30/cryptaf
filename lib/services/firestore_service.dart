@@ -638,67 +638,35 @@ class FirestoreService {
       final data = doc.data() as Map<String, dynamic>;
 
       if (data['emergencyEnabled'] == true) {
-        final oldResetAt = data['emergencyResetAt'] as Timestamp?;
+        final durationHours = data['emergencyDurationHours'] as int? ?? 168;
 
-        final completer = Completer<DocumentSnapshot>();
-        final waiter = _SnapshotWaiter(completer, (snap) {
-          if (snap.metadata.hasPendingWrites) return false;
-          final snapData = snap.data() as Map<String, dynamic>?;
-          if (snapData == null) return false;
-
-          final newResetAt = snapData['emergencyResetAt'];
-          if (newResetAt is! Timestamp) return false;
-
-          // Must correspond to the newly completed reset, not the previous value
-          if (oldResetAt != null && newResetAt.compareTo(oldResetAt) <= 0) {
-            return false;
-          }
-
-          return true;
-        });
-
-        _snapshotWaiters.add(waiter);
-
-        try {
-          // STEP 1 - RESET USING SERVER TIMESTAMP
+        // 1. Self-healing fallback: If deadline is somehow null but resetAt exists,
+        // it means a previous write was interrupted. We repair it using the existing reset time.
+        // This is a safety net for any edge case that might leave a deadline stuck at null.
+        if (data['emergencyDeadline'] == null && data['emergencyResetAt'] != null) {
+          final resetAt = data['emergencyResetAt'] as Timestamp;
+          final repairedDeadline = resetAt.toDate().add(Duration(hours: durationHours));
+          
           await docRef.update({
-            'emergencyResetAt': FieldValue.serverTimestamp(),
-            'emergencyDeadline': null, // Intentionally null during transition
+            'emergencyDeadline': Timestamp.fromDate(repairedDeadline),
           });
-
-          // Race-safe fallback:
-          // after update completes, also examine _latestSnapshot.
-          // If it already contains the confirmed new server reset and
-          // completer is not completed, complete it manually.
-          final latest = _latestSnapshot;
-          if (!completer.isCompleted &&
-              latest != null &&
-              waiter.predicate(latest)) {
-            completer.complete(latest);
-          }
-
-          final confirmedSnap = await completer.future.timeout(
-            const Duration(seconds: 15),
-          );
-
-          final confirmedData = confirmedSnap.data() as Map<String, dynamic>;
-
-          // STEP 3 - DERIVE DEADLINE FROM SERVER VALUE
-          final serverResetAt = confirmedData['emergencyResetAt'] as Timestamp;
-          final confirmedDuration =
-              confirmedData['emergencyDurationHours'] as int? ?? 168;
-          final deadline =
-              serverResetAt.toDate().add(Duration(hours: confirmedDuration));
-
-          await docRef.update({
-            'emergencyDeadline': Timestamp.fromDate(deadline),
-          });
-        } finally {
-          _snapshotWaiters.remove(waiter);
+          debugPrint('Self-healed missing emergencyDeadline');
         }
+
+        // 2. Primary atomic write: We use client-side local time (DateTime.now()) instead 
+        // of FieldValue.serverTimestamp() to calculate both fields simultaneously. 
+        // Tradeoff: We trust the client's clock (minor risk of drift) in exchange for 
+        // eliminating a race condition where a dropped connection between two sequential
+        // writes leaves the deadline permanently null and silently disables the Dead Man's Switch.
+        final now = DateTime.now().toUtc();
+        final deadline = now.add(Duration(hours: durationHours));
+
+        await docRef.update({
+          'emergencyResetAt': Timestamp.fromDate(now),
+          'emergencyDeadline': Timestamp.fromDate(deadline),
+        });
       }
     } catch (e) {
-      // If STEP 1 succeeds but STEP 2 fails, emergencyDeadline remains null, denying access.
       debugPrint('Error updating last active time: $e');
     }
   }
