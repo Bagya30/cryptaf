@@ -242,8 +242,8 @@ class _NomineeScreenState extends State<NomineeScreen> {
 
     if (widget.isTab) {
       return Scaffold(
-        backgroundColor: _bg,
-        body: AnimatedBackground(child: content),
+        backgroundColor: Colors.transparent,
+        body: content,
         floatingActionButton: _buildFAB(),
       );
     }

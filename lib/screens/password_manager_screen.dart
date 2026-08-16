@@ -59,7 +59,9 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
           Clipboard.setData(const ClipboardData(text: ''));
           timer.cancel();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Clipboard cleared for security.'), backgroundColor: Colors.orangeAccent),
+            const SnackBar(
+                content: Text('Clipboard cleared for security.'),
+                backgroundColor: Colors.orangeAccent),
           );
         }
       });
@@ -83,13 +85,16 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
             borderRadius: BorderRadius.circular(20),
             side: const BorderSide(color: Colors.white12),
           ),
-          title: const Text('Add Password Entry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: const Text('Add Password Entry',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Website / App Name', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                const Text('Website / App Name',
+                    style: TextStyle(color: Colors.white70, fontSize: 13)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: websiteCtrl,
@@ -99,12 +104,14 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                const Text('Username / Email', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                const Text('Username / Email',
+                    style: TextStyle(color: Colors.white70, fontSize: 13)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: usernameCtrl,
@@ -114,12 +121,14 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                     hintStyle: const TextStyle(color: Colors.white24),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                const Text('Password', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                const Text('Password',
+                    style: TextStyle(color: Colors.white70, fontSize: 13)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: passwordCtrl,
@@ -132,21 +141,31 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                     fillColor: Colors.white.withOpacity(0.05),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        obscureDialogPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        obscureDialogPassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                         color: const Color(0xFFC9A84C),
                         size: 20,
                       ),
-                      onPressed: () => setDialogState(() => obscureDialogPassword = !obscureDialogPassword),
+                      onPressed: () => setDialogState(
+                          () => obscureDialogPassword = !obscureDialogPassword),
                     ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
-                    icon: const Icon(Icons.vpn_key_outlined, size: 16, color: Color(0xFFC9A84C)),
-                    label: const Text('Generate Password', style: TextStyle(color: Color(0xFFC9A84C), fontSize: 13, fontWeight: FontWeight.bold)),
+                    icon: const Icon(Icons.vpn_key_outlined,
+                        size: 16, color: Color(0xFFC9A84C)),
+                    label: const Text('Generate Password',
+                        style: TextStyle(
+                            color: Color(0xFFC9A84C),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold)),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -161,14 +180,17 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 GradientButton(
                   text: 'Encrypt & Save',
                   isLoading: isSaving,
                   onPressed: () async {
-                    if (websiteCtrl.text.isEmpty || usernameCtrl.text.isEmpty || passwordCtrl.text.isEmpty) {
+                    if (websiteCtrl.text.isEmpty ||
+                        usernameCtrl.text.isEmpty ||
+                        passwordCtrl.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please fill in all fields'), backgroundColor: Colors.redAccent),
+                        const SnackBar(
+                            content: Text('Please fill in all fields'),
+                            backgroundColor: Colors.redAccent),
                       );
                       return;
                     }
@@ -176,21 +198,28 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                     setDialogState(() => isSaving = true);
 
                     try {
-                      final encryptedPass = _crypto.encryptString(passwordCtrl.text, _crypto.masterAppKey);
-                      await _firestore.addPasswordEntry(websiteCtrl.text.trim(), usernameCtrl.text.trim(), encryptedPass);
+                      final encryptedPass = _crypto.encryptString(
+                          passwordCtrl.text, _crypto.masterAppKey);
+                      await _firestore.addPasswordEntry(websiteCtrl.text.trim(),
+                          usernameCtrl.text.trim(), encryptedPass);
                       if (!mounted) return;
                       // ignore: use_build_context_synchronously
                       Navigator.pop(context);
                       // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Password encrypted and saved successfully!'), backgroundColor: Colors.greenAccent),
+                        const SnackBar(
+                            content: Text(
+                                'Password encrypted and saved successfully!'),
+                            backgroundColor: Colors.greenAccent),
                       );
                     } catch (e) {
                       setDialogState(() => isSaving = false);
                       if (!mounted) return;
                       // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error saving password: $e'), backgroundColor: Colors.redAccent),
+                        SnackBar(
+                            content: Text('Error saving password: $e'),
+                            backgroundColor: Colors.redAccent),
                       );
                     }
                   },
@@ -201,7 +230,8 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+              child:
+                  const Text('Cancel', style: TextStyle(color: Colors.white54)),
             ),
           ],
         ),
@@ -221,11 +251,19 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.lock_outline, size: 64, color: Color(0xFFC9A84C)),
+                  const Icon(Icons.lock_outline,
+                      size: 64, color: Color(0xFFC9A84C)),
                   const SizedBox(height: 16),
-                  const Text('Unlock Password Manager', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('Unlock Password Manager',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('Enter your vault password to access your passwords.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 14)),
+                  const Text(
+                      'Enter your vault password to access your passwords.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white54, fontSize: 14)),
                   const SizedBox(height: 24),
                   TextField(
                     controller: _vaultPassCtrl,
@@ -238,18 +276,25 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                       fillColor: Colors.white.withOpacity(0.05),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureVaultPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          _obscureVaultPassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                           color: const Color(0xFFC9A84C),
                           size: 20,
                         ),
-                        onPressed: () => setState(() => _obscureVaultPassword = !_obscureVaultPassword),
+                        onPressed: () => setState(() =>
+                            _obscureVaultPassword = !_obscureVaultPassword),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none),
                     ),
                   ),
                   if (_unlockError.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    Text(_unlockError, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+                    Text(_unlockError,
+                        style: const TextStyle(
+                            color: Colors.redAccent, fontSize: 13)),
                   ],
                   const SizedBox(height: 24),
                   GradientButton(
@@ -260,7 +305,8 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                         _isUnlocking = true;
                         _unlockError = '';
                       });
-                      final isValid = await _crypto.verifyVaultPassword(_vaultPassCtrl.text);
+                      final isValid = await _crypto
+                          .verifyVaultPassword(_vaultPassCtrl.text);
                       if (!mounted) return;
                       if (isValid) {
                         setState(() {
@@ -283,8 +329,8 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
 
       if (widget.isTab) {
         return Scaffold(
-          backgroundColor: const Color(0xFF0A0A0A),
-          body: AnimatedBackground(child: unlockBody),
+          backgroundColor: Colors.transparent,
+          body: unlockBody,
         );
       }
       return Scaffold(
@@ -292,7 +338,9 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('Password Manager', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: const Text('Password Manager',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
@@ -306,7 +354,8 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
       stream: _firestore.getPasswordEntries(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFC9A84C)));
+          return const Center(
+              child: CircularProgressIndicator(color: Color(0xFFC9A84C)));
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -314,22 +363,32 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.password_outlined, size: 72, color: Colors.white24),
+                const Icon(Icons.password_outlined,
+                    size: 72, color: Colors.white24),
                 const SizedBox(height: 16),
-                const Text('No Passwords Stored', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                const Text('No Passwords Stored',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text('Store your website logins securely with AES-256 encryption.', style: TextStyle(color: Colors.white54, fontSize: 14)),
+                const Text(
+                    'Store your website logins securely with AES-256 encryption.',
+                    style: TextStyle(color: Colors.white54, fontSize: 14)),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFC9A84C),
                     foregroundColor: const Color(0xFF0A0A0A),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () => _showAddPasswordDialog(context),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Password', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text('Add Password',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -348,29 +407,38 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                 children: [
                   const Text(
                     'Password Manager',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
                   ),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFC9A84C),
                       foregroundColor: const Color(0xFF0A0A0A),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () => _showAddPasswordDialog(context),
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text('Add',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              const Text('AES-256 encrypted passwords. Tap the eye icon or password to reveal.', style: TextStyle(color: Colors.white54, fontSize: 13)),
+              const Text(
+                  'AES-256 encrypted passwords. Tap the eye icon or password to reveal.',
+                  style: TextStyle(color: Colors.white54, fontSize: 13)),
               const SizedBox(height: 24),
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: docs.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 16),
                 itemBuilder: (context, index) {
                   final doc = docs[index];
                   final data = doc.data() as Map<String, dynamic>;
@@ -383,7 +451,8 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                   String displayPass = '••••••••••••';
                   if (isRevealed) {
                     if (!_decryptedPasswordsCache.containsKey(docId)) {
-                      _decryptedPasswordsCache[docId] = _crypto.decryptString(encryptedPass, _crypto.masterAppKey);
+                      _decryptedPasswordsCache[docId] = _crypto.decryptString(
+                          encryptedPass, _crypto.masterAppKey);
                     }
                     displayPass = _decryptedPasswordsCache[docId]!;
                   }
@@ -398,19 +467,29 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                             color: const Color(0xFFC9A84C).withOpacity(0.15),
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
-                              BoxShadow(color: const Color(0xFFC9A84C).withOpacity(0.2), blurRadius: 10),
+                              BoxShadow(
+                                  color:
+                                      const Color(0xFFC9A84C).withOpacity(0.2),
+                                  blurRadius: 10),
                             ],
                           ),
-                          child: const Icon(Icons.vpn_key_outlined, color: Color(0xFFC9A84C), size: 24),
+                          child: const Icon(Icons.vpn_key_outlined,
+                              color: Color(0xFFC9A84C), size: 24),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(website, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              Text(website,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
-                              Text(username, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                              Text(username,
+                                  style: const TextStyle(
+                                      color: Colors.white70, fontSize: 13)),
                               const SizedBox(height: 6),
                               GestureDetector(
                                 onTap: () {
@@ -423,7 +502,8 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                                   });
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.05),
                                     borderRadius: BorderRadius.circular(6),
@@ -434,15 +514,21 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                                       Text(
                                         displayPass,
                                         style: TextStyle(
-                                          color: isRevealed ? const Color(0xFFC9A84C) : Colors.white54,
+                                          color: isRevealed
+                                              ? const Color(0xFFC9A84C)
+                                              : Colors.white54,
                                           fontSize: 13,
-                                          fontWeight: isRevealed ? FontWeight.bold : FontWeight.normal,
+                                          fontWeight: isRevealed
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
                                           letterSpacing: isRevealed ? 1 : 2,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
                                       Icon(
-                                        isRevealed ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                        isRevealed
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
                                         color: Colors.white54,
                                         size: 16,
                                       ),
@@ -454,48 +540,72 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.copy_outlined, color: Color(0xFFC9A84C)),
+                          icon: const Icon(Icons.copy_outlined,
+                              color: Color(0xFFC9A84C)),
                           onPressed: () {
                             if (!_decryptedPasswordsCache.containsKey(docId)) {
-                              _decryptedPasswordsCache[docId] = _crypto.decryptString(encryptedPass, _crypto.masterAppKey);
+                              _decryptedPasswordsCache[docId] =
+                                  _crypto.decryptString(
+                                      encryptedPass, _crypto.masterAppKey);
                             }
                             final decrypted = _decryptedPasswordsCache[docId]!;
                             Clipboard.setData(ClipboardData(text: decrypted));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Password copied to clipboard'), duration: Duration(seconds: 2)),
+                              const SnackBar(
+                                  content: Text('Password copied to clipboard'),
+                                  duration: Duration(seconds: 2)),
                             );
                             _startClipboardCountdown();
                           },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.white38),
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.white38),
                           onPressed: () async {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 backgroundColor: const Color(0xFF0A0A0A),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white12)),
-                                title: const Text('Delete Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                content: Text('Are you sure you want to delete the password for $website?', style: const TextStyle(color: Colors.white70)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    side: const BorderSide(
+                                        color: Colors.white12)),
+                                title: const Text('Delete Password',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold)),
+                                content: Text(
+                                    'Are you sure you want to delete the password for $website?',
+                                    style:
+                                        const TextStyle(color: Colors.white70)),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                                    child: const Text('Cancel',
+                                        style:
+                                            TextStyle(color: Colors.white54)),
                                   ),
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text('Delete', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                                    child: const Text('Delete',
+                                        style: TextStyle(
+                                            color: Colors.redAccent,
+                                            fontWeight: FontWeight.bold)),
                                   ),
                                 ],
                               ),
                             );
                             if (confirm == true) {
-                              await _firestore.deletePasswordEntry(docId, website);
+                              await _firestore.deletePasswordEntry(
+                                  docId, website);
                               if (mounted) {
                                 if (!mounted) return;
                                 // ignore: use_build_context_synchronously
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Deleted password for $website'), backgroundColor: Colors.orangeAccent),
+                                  SnackBar(
+                                      content:
+                                          Text('Deleted password for $website'),
+                                      backgroundColor: Colors.orangeAccent),
                                 );
                               }
                             }
@@ -526,11 +636,13 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.shield_outlined, color: Color(0xFFC9A84C), size: 20),
+                  const Icon(Icons.shield_outlined,
+                      color: Color(0xFFC9A84C), size: 20),
                   const SizedBox(width: 10),
                   Text(
                     'Clipboard clears in ${_clipboardCountdown}s',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: 12),
                   const SizedBox(
@@ -549,7 +661,10 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
     );
 
     if (widget.isTab) {
-      return finalBody;
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: finalBody,
+      );
     }
 
     return Scaffold(
@@ -557,7 +672,8 @@ class PasswordManagerScreenState extends State<PasswordManagerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Password Manager', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Password Manager',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -573,7 +689,8 @@ class _PasswordGeneratorDialog extends StatefulWidget {
   const _PasswordGeneratorDialog({required this.onPasswordSelected});
 
   @override
-  State<_PasswordGeneratorDialog> createState() => _PasswordGeneratorDialogState();
+  State<_PasswordGeneratorDialog> createState() =>
+      _PasswordGeneratorDialogState();
 }
 
 class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
@@ -628,7 +745,8 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
         borderRadius: BorderRadius.circular(20),
         side: const BorderSide(color: Colors.white12),
       ),
-      title: const Text('Generate Strong Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      title: const Text('Generate Strong Password',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       content: StatefulBuilder(
         builder: (context, setDialogState) {
           return SizedBox(
@@ -639,7 +757,8 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(12),
@@ -649,9 +768,13 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                       children: [
                         Expanded(
                           child: Text(
-                            _generatedPassword.isEmpty ? 'Select options' : _generatedPassword,
+                            _generatedPassword.isEmpty
+                                ? 'Select options'
+                                : _generatedPassword,
                             style: TextStyle(
-                              color: _generatedPassword.isEmpty ? Colors.white30 : gold,
+                              color: _generatedPassword.isEmpty
+                                  ? Colors.white30
+                                  : gold,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -659,18 +782,23 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.copy, color: Colors.white70, size: 20),
+                          icon: const Icon(Icons.copy,
+                              color: Colors.white70, size: 20),
                           onPressed: _generatedPassword.isEmpty
                               ? null
                               : () {
-                                  Clipboard.setData(ClipboardData(text: _generatedPassword));
+                                  Clipboard.setData(
+                                      ClipboardData(text: _generatedPassword));
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Generated password copied to clipboard')),
+                                    const SnackBar(
+                                        content: Text(
+                                            'Generated password copied to clipboard')),
                                   );
                                 },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.refresh, color: Colors.white70, size: 20),
+                          icon: const Icon(Icons.refresh,
+                              color: Colors.white70, size: 20),
                           onPressed: _generatePassword,
                         ),
                       ],
@@ -680,8 +808,11 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Length', style: TextStyle(color: Colors.white70)),
-                      Text('$_length', style: const TextStyle(color: gold, fontWeight: FontWeight.bold)),
+                      const Text('Length',
+                          style: TextStyle(color: Colors.white70)),
+                      Text('$_length',
+                          style: const TextStyle(
+                              color: gold, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   Slider(
@@ -721,7 +852,8 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                       backgroundColor: gold,
                       foregroundColor: const Color(0xFF0A0A0A),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: _generatedPassword.isEmpty
                         ? null
@@ -729,7 +861,8 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                             widget.onPasswordSelected(_generatedPassword);
                             Navigator.pop(context);
                           },
-                    child: const Text('Use Password', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Use Password',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -746,9 +879,11 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
     );
   }
 
-  Widget _buildSwitchTile(String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildSwitchTile(
+      String title, bool value, ValueChanged<bool> onChanged) {
     return SwitchListTile(
-      title: Text(title, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+      title: Text(title,
+          style: const TextStyle(color: Colors.white70, fontSize: 14)),
       value: value,
       activeColor: const Color(0xFFC9A84C),
       contentPadding: EdgeInsets.zero,

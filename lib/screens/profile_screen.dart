@@ -69,7 +69,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await _user?.reload();
 
         if (_user != null) {
-          await FirebaseFirestore.instance.collection('users').doc(_user!.uid).set({
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(_user!.uid)
+              .set({
             'photoUrl': photoUrl,
           }, SetOptions(merge: true));
         }
@@ -80,14 +83,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _isLoading = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile picture updated successfully!'), backgroundColor: Colors.greenAccent),
+            const SnackBar(
+                content: Text('Profile picture updated successfully!'),
+                backgroundColor: Colors.greenAccent),
           );
         }
       } else {
         if (mounted) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to upload image to Cloudinary'), backgroundColor: Colors.redAccent),
+            const SnackBar(
+                content: Text('Failed to upload image to Cloudinary'),
+                backgroundColor: Colors.redAccent),
           );
         }
       }
@@ -95,7 +102,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error uploading profile picture: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(
+              content: Text('Error uploading profile picture: $e'),
+              backgroundColor: Colors.redAccent),
         );
       }
     }
@@ -132,12 +141,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0A0A0A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Colors.white12)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Colors.white12)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 28),
+            Icon(Icons.warning_amber_rounded,
+                color: Colors.redAccent, size: 28),
             SizedBox(width: 10),
-            Text('Delete Account', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('Delete Account',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
         content: const Text(
@@ -147,11 +161,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete Permanently', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            child: const Text('Delete Permanently',
+                style: TextStyle(
+                    color: Colors.redAccent, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -173,7 +190,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error deleting account: ${e.toString()}'), backgroundColor: Colors.redAccent),
+            SnackBar(
+                content: Text('Error deleting account: ${e.toString()}'),
+                backgroundColor: Colors.redAccent),
           );
         }
       }
@@ -207,20 +226,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: teal, width: 2),
                       boxShadow: [
-                        BoxShadow(color: teal.withOpacity(0.3), blurRadius: 25, spreadRadius: 5),
+                        BoxShadow(
+                            color: teal.withOpacity(0.3),
+                            blurRadius: 25,
+                            spreadRadius: 5),
                       ],
                     ),
                     child: ClipOval(
-                      child: _user?.photoURL != null && _user!.photoURL!.isNotEmpty
+                      child: _user?.photoURL != null &&
+                              _user!.photoURL!.isNotEmpty
                           ? Image.network(
                               _user!.photoURL!,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
                                 color: teal.withOpacity(0.2),
                                 child: Center(
                                   child: Text(
-                                    _getInitials(_user?.displayName, _user?.email ?? 'U'),
-                                    style: const TextStyle(color: teal, fontSize: 40, fontWeight: FontWeight.bold),
+                                    _getInitials(_user?.displayName,
+                                        _user?.email ?? 'U'),
+                                    style: const TextStyle(
+                                        color: teal,
+                                        fontSize: 40,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
@@ -229,8 +257,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: teal.withOpacity(0.2),
                               child: Center(
                                 child: Text(
-                                  _getInitials(_user?.displayName, _user?.email ?? 'U'),
-                                  style: const TextStyle(color: teal, fontSize: 40, fontWeight: FontWeight.bold),
+                                  _getInitials(
+                                      _user?.displayName, _user?.email ?? 'U'),
+                                  style: const TextStyle(
+                                      color: teal,
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
@@ -245,7 +277,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: teal,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.camera_alt, color: isDark ? const Color(0xFF0A0A0A) : Colors.white, size: 20),
+                      child: Icon(Icons.camera_alt,
+                          color:
+                              isDark ? const Color(0xFF0A0A0A) : Colors.white,
+                          size: 20),
                     ),
                   ),
                 ],
@@ -262,16 +297,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildFieldLabel('Email Address', subColor),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.black.withOpacity(0.03),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                    border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.black12),
                   ),
                   child: Text(
                     _user?.email ?? '',
-                    style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 16),
+                    style: TextStyle(
+                        color: textColor.withOpacity(0.8), fontSize: 16),
                   ),
                 ),
 
@@ -287,10 +327,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     hintText: 'Enter your name',
                     hintStyle: TextStyle(color: hintColor),
                     filled: true,
-                    fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+                    fillColor: isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.black.withOpacity(0.03),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                      borderSide: BorderSide(
+                          color: isDark ? Colors.white12 : Colors.black12),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -312,30 +355,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 24),
 
-
           GlassContainer(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Legal & Privacy',
-                  style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.description_outlined, color: teal),
-                  title: Text('Terms of Service', style: TextStyle(color: textColor)),
+                  title: Text('Terms of Service',
+                      style: TextStyle(color: textColor)),
                   trailing: Icon(Icons.chevron_right, color: subColor),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsScreen())),
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const TermsScreen())),
                 ),
                 Divider(color: isDark ? Colors.white12 : Colors.black12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.privacy_tip_outlined, color: teal),
-                  title: Text('Privacy Policy', style: TextStyle(color: textColor)),
+                  title: Text('Privacy Policy',
+                      style: TextStyle(color: textColor)),
                   trailing: Icon(Icons.chevron_right, color: subColor),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())),
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const PrivacyPolicyScreen())),
                 ),
               ],
             ),
@@ -347,15 +398,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   'Tools',
-                  style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.auto_awesome, color: teal),
-                  title: Text('AI Assistant', style: TextStyle(color: textColor)),
+                  title:
+                      Text('AI Assistant', style: TextStyle(color: textColor)),
                   trailing: Icon(Icons.chevron_right, color: subColor),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AssistantScreen())),
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const AssistantScreen())),
                 ),
               ],
             ),
@@ -367,7 +425,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   'App & Support',
-                  style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
@@ -375,29 +436,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   leading: const Icon(Icons.info_outline, color: teal),
                   title: Text('App Info', style: TextStyle(color: textColor)),
                   trailing: Icon(Icons.chevron_right, color: subColor),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AppInfoScreen())),
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const AppInfoScreen())),
                 ),
                 Divider(color: isDark ? Colors.white12 : Colors.black12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.gavel_outlined, color: teal),
-                  title: Text('GDPR Rights', style: TextStyle(color: textColor)),
+                  title:
+                      Text('GDPR Rights', style: TextStyle(color: textColor)),
                   trailing: Icon(Icons.chevron_right, color: subColor),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GdprScreen())),
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const GdprScreen())),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
           StreamBuilder<DocumentSnapshot>(
-            stream: _user != null ? FirebaseFirestore.instance.collection('users').doc(_user!.uid).snapshots() : const Stream.empty(),
+            stream: _user != null
+                ? FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(_user!.uid)
+                    .snapshots()
+                : const Stream.empty(),
             builder: (context, snapshot) {
               String lastBackupStr = 'Never';
               if (snapshot.hasData && snapshot.data!.exists) {
                 final data = snapshot.data!.data() as Map<String, dynamic>?;
                 if (data != null && data['lastBackupDate'] != null) {
                   final Timestamp ts = data['lastBackupDate'];
-                  lastBackupStr = DateFormat('MMM dd, yyyy - hh:mm a').format(ts.toDate());
+                  lastBackupStr =
+                      DateFormat('MMM dd, yyyy - hh:mm a').format(ts.toDate());
                 }
               }
 
@@ -407,7 +477,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Text(
                       'Data Management',
-                      style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: textColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -417,11 +490,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 16),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.cloud_download_outlined, color: teal),
-                      title: Text('Backup & Restore', style: TextStyle(color: textColor)),
-                      subtitle: Text('Export AES-256 encrypted vault archives', style: TextStyle(color: hintColor, fontSize: 12)),
+                      leading: const Icon(Icons.cloud_download_outlined,
+                          color: teal),
+                      title: Text('Backup & Restore',
+                          style: TextStyle(color: textColor)),
+                      subtitle: Text('Export AES-256 encrypted vault archives',
+                          style: TextStyle(color: hintColor, fontSize: 12)),
                       trailing: Icon(Icons.chevron_right, color: subColor),
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupScreen())),
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const BackupScreen())),
                     ),
                   ],
                 ),
@@ -434,14 +513,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 52,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent.withOpacity(isDark ? 0.15 : 0.08),
+                backgroundColor:
+                    Colors.redAccent.withOpacity(isDark ? 0.15 : 0.08),
                 side: const BorderSide(color: Colors.redAccent, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: _deleteAccount,
               child: const Text(
                 'Delete Account',
-                style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -451,8 +535,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (widget.isTab) {
       return Scaffold(
-        backgroundColor: bg,
-        body: AnimatedBackground(child: content),
+        backgroundColor: Colors.transparent,
+        body: content,
       );
     }
 
@@ -461,7 +545,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('My Profile', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+        title: Text('My Profile',
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
@@ -476,7 +561,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         label,
-        style: TextStyle(color: labelColor, fontSize: 14, fontWeight: FontWeight.w600),
+        style: TextStyle(
+            color: labelColor, fontSize: 14, fontWeight: FontWeight.w600),
       ),
     );
   }
