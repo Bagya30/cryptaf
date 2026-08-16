@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cryptaf/services/gemini_service.dart';
+import 'package:cryptaf/services/assistant_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
 
 class AssistantScreen extends StatefulWidget {
@@ -10,7 +10,7 @@ class AssistantScreen extends StatefulWidget {
 }
 
 class AssistantScreenState extends State<AssistantScreen> {
-  final GeminiService _gemini = GeminiService();
+  final AssistantService _assistant = AssistantService();
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
@@ -25,7 +25,7 @@ class AssistantScreenState extends State<AssistantScreen> {
     });
     _controller.clear();
 
-    String response = await _gemini.askAssistant(text);
+    String response = await _assistant.askAssistant(text);
 
     setState(() {
       _messages.add({'role': 'ai', 'text': response});
@@ -47,7 +47,9 @@ class AssistantScreenState extends State<AssistantScreen> {
           children: [
             Icon(Icons.smart_toy, color: teal),
             const SizedBox(width: 8),
-            const Text('Vault Assistant', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const Text('Vault Assistant',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
         leading: IconButton(
@@ -67,23 +69,34 @@ class AssistantScreenState extends State<AssistantScreen> {
                   bool isUser = msg['role'] == 'user';
 
                   return Align(
-                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment:
+                        isUser ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: isUser ? teal : Colors.white.withOpacity(0.05),
                         borderRadius: BorderRadius.only(
                           topLeft: const Radius.circular(16),
                           topRight: const Radius.circular(16),
-                          bottomLeft: isUser ? const Radius.circular(16) : const Radius.circular(0),
-                          bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(16),
+                          bottomLeft: isUser
+                              ? const Radius.circular(16)
+                              : const Radius.circular(0),
+                          bottomRight: isUser
+                              ? const Radius.circular(0)
+                              : const Radius.circular(16),
                         ),
-                        border: isUser ? null : Border.all(color: teal.withOpacity(0.4), width: 1.2),
+                        border: isUser
+                            ? null
+                            : Border.all(
+                                color: teal.withOpacity(0.4), width: 1.2),
                         boxShadow: isUser
                             ? null
                             : [
-                                BoxShadow(color: teal.withOpacity(0.15), blurRadius: 10),
+                                BoxShadow(
+                                    color: teal.withOpacity(0.15),
+                                    blurRadius: 10),
                               ],
                       ),
                       child: Text(
@@ -91,7 +104,8 @@ class AssistantScreenState extends State<AssistantScreen> {
                         style: TextStyle(
                           color: isUser ? bg : Colors.white,
                           fontSize: 16,
-                          fontWeight: isUser ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight:
+                              isUser ? FontWeight.w600 : FontWeight.w400,
                         ),
                       ),
                     ),
@@ -105,19 +119,53 @@ class AssistantScreenState extends State<AssistantScreen> {
                 child: Row(
                   children: [
                     const SizedBox(width: 16),
-                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: teal)),
+                    SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: teal)),
                     const SizedBox(width: 12),
-                    const Text("Assistant is thinking...", style: TextStyle(color: Colors.white54)),
+                    const Text("Assistant is thinking...",
+                        style: TextStyle(color: Colors.white54)),
                   ],
                 ),
               ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  "How do I add a nominee?",
+                  "How is my data encrypted?",
+                  "How does the emergency fail-safe work?",
+                  "How do I upload a file?"
+                ].map((text) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: ActionChip(
+                      backgroundColor: Colors.white.withOpacity(0.05),
+                      side: BorderSide(color: teal.withOpacity(0.3)),
+                      label: Text(text, style: TextStyle(color: teal, fontSize: 13)),
+                      onPressed: () {
+                        _controller.text = text;
+                        _sendMessage();
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: bg,
-                border: Border(top: BorderSide(color: Colors.white.withOpacity(0.07))),
+                border: Border(
+                    top: BorderSide(color: Colors.white.withOpacity(0.07))),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, -4)),
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 20,
+                      offset: const Offset(0, -4)),
                 ],
               ),
               child: SafeArea(
@@ -126,7 +174,8 @@ class AssistantScreenState extends State<AssistantScreen> {
                   children: [
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(24),
@@ -151,7 +200,8 @@ class AssistantScreenState extends State<AssistantScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(color: teal.withOpacity(0.4)),
                         boxShadow: [
-                          BoxShadow(color: teal.withOpacity(0.3), blurRadius: 10),
+                          BoxShadow(
+                              color: teal.withOpacity(0.3), blurRadius: 10),
                         ],
                       ),
                       child: IconButton(

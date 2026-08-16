@@ -1,6 +1,6 @@
 import 'dart:async';
 
-class GeminiService {
+class AssistantService {
   final Map<String, List<String>> _responses = {
     'nominee': [
       "To manage your nominees, go to 'Nominee Management' in the sidebar menu. You can add new nominees by entering their name. To delete a nominee, simply tap the delete icon next to their name in the list.",
@@ -34,34 +34,86 @@ class GeminiService {
       "Your vault lets you safely store and share files using temporary links with expirations, ensuring nothing stays public forever."
     ],
     'default': [
-      "Cryptaf is built on the principle of 'Your Vault, Your Rules.' We use end-to-end AES-256 encryption and a zero-knowledge architecture to ensure your data is always private and secure.",
-      "I'm here to help you navigate Cryptaf. You can ask me about file encryption, nominee management, emergency protocols, or how to secure your account.",
-      "Security is at the heart of everything we do. Whether it's our local-first encryption or our smart emergency timers, your data is in safe hands.",
-      "If you're unsure where to start, try uploading a test document, or setting up your 2FA and Biometric login in Security Settings."
+      "That's outside what I can help with. I can only answer questions about Cryptaf, like encryption, nominees, uploading files, or the Dead Man's Switch.",
     ],
   };
 
   Future<String> askAssistant(String userMessage) async {
     final query = userMessage.toLowerCase();
-    
+
     // Simulate thinking time
     await Future.delayed(const Duration(milliseconds: 900));
 
-    if (_containsAny(query, ['nominee', 'add nominee', 'delete nominee', 'edit nominee', 'legacy', 'trusted contact', 'inherit', 'give access'])) {
+    if (_containsAny(query, [
+      'nominee',
+      'add nominee',
+      'delete nominee',
+      'edit nominee',
+      'legacy',
+      'trusted contact',
+      'inherit',
+      'give access'
+    ])) {
       return _get('nominee');
-    } else if (_containsAny(query, ['encrypt', 'aes', 'security', 'protection', 'safe', 'secure', 'hacked', 'breach', 'zero-knowledge', 'zero knowledge'])) {
+    } else if (_containsAny(query, [
+      'encrypt',
+      'aes',
+      'security',
+      'protection',
+      'safe',
+      'secure',
+      'hacked',
+      'breach',
+      'zero-knowledge',
+      'zero knowledge'
+    ])) {
       // Prioritize encryption if specific keywords are present
-      if (_containsAny(query, ['encrypt', 'aes', '256', 'zero-knowledge', 'zero knowledge'])) {
+      if (_containsAny(query,
+          ['encrypt', 'aes', '256', 'zero-knowledge', 'zero knowledge'])) {
         return _get('encryption');
       }
       return _get('security');
-    } else if (_containsAny(query, ['emergency', 'timer', '72', 'hour', 'access', 'fail-safe', 'failsafe', 'locked out', 'recover'])) {
+    } else if (_containsAny(query, [
+      'emergency',
+      'timer',
+      '72',
+      'hour',
+      'access',
+      'fail-safe',
+      'failsafe',
+      'locked out',
+      'recover'
+    ])) {
       return _get('emergency');
-    } else if (_containsAny(query, ['upload', 'file', 'format', 'pdf', 'image', 'add file', 'save', 'document', 'scan'])) {
+    } else if (_containsAny(query, [
+      'upload',
+      'file',
+      'format',
+      'pdf',
+      'image',
+      'add file',
+      'save',
+      'document',
+      'scan'
+    ])) {
       return _get('upload');
-    } else if (_containsAny(query, ['vault', 'my data', 'what is', 'how to use', 'organize', 'folder'])) {
+    } else if (_containsAny(query,
+        ['vault', 'my data', 'what is', 'how to use', 'organize', 'folder'])) {
       return _get('vault');
-    } else if (_containsAny(query, ['2fa', 'biometric', 'faceid', 'fingerprint', 'mfa', 'authenticator', 'pin', 'lock', 'password', 'forgot password', 'reset', 'change password'])) {
+    } else if (_containsAny(query, [
+      '2fa',
+      'biometric',
+      'faceid',
+      'fingerprint',
+      'mfa',
+      'authenticator',
+      'pin',
+      'lock',
+      'password',
+      'forgot password',
+      'reset',
+      'change password'
+    ])) {
       return _get('security');
     }
 
