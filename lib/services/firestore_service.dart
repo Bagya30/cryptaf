@@ -310,12 +310,8 @@ class FirestoreService {
             });
           }
 
-          // Mark legacy record safely
-          batch.update(doc.reference, {
-            'migratedToCanonical': true,
-            'canonicalNomineeId': normalizedEmail,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+          // Delete the legacy record now that canonical exists
+          batch.delete(doc.reference);
 
           hasMigrations = true;
         }
@@ -386,6 +382,8 @@ class FirestoreService {
         .collection('users')
         .doc(uid)
         .collection('nominees')
+        // Exclude any legacy records that pre-date the deletion fix
+        .where('migratedToCanonical', isNull: true)
         .orderBy('addedAt', descending: true)
         .snapshots();
   }

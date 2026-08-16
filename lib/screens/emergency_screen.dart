@@ -1,16 +1,11 @@
 import 'dart:async';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cryptaf/services/firestore_service.dart';
-import 'package:cryptaf/screens/otp_screen.dart';
-import 'package:cryptaf/services/notification_service.dart';
 import 'package:cryptaf/widgets/animated_background.dart';
 import 'package:cryptaf/widgets/glass_container.dart';
 import 'package:cryptaf/widgets/gradient_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -24,11 +19,11 @@ class EmergencyScreen extends StatefulWidget {
 
 class EmergencyScreenState extends State<EmergencyScreen> {
   final FirestoreService _firestore = FirestoreService();
-  final TextEditingController _emailController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
-  bool _isSendingOtp = false;
+
   int _durationHours = 168;
+  bool _isUpdatingDuration = false;
+  bool _isToggling = false;
 
   @override
   void initState() {
@@ -38,62 +33,8 @@ class EmergencyScreenState extends State<EmergencyScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  Future<void> _notifyNomineesOfEmergency() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      final data = userDoc.data();
-      final userName = data?['name'] ?? user.displayName ?? user.email ?? 'User';
-
-      final nomineesSnap = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('nominees')
-          .get();
-
-      for (var doc in nomineesSnap.docs) {
-        final nomineeData = doc.data();
-        final nomineeEmail = nomineeData['email'] as String?;
-        if (nomineeEmail != null && nomineeEmail.isNotEmpty) {
-          await _sendNomineeEmail(nomineeEmail, userName);
-        }
-      }
-    } catch (e) {
-      debugPrint('Failed to notify nominees: $e');
-    }
-  }
-
-  Future<void> _sendNomineeEmail(String nomineeEmail, String userName) async {
-    try {
-      final now = DateTime.now();
-      final timeStr = "${now.hour}:${now.minute.toString().padLeft(2, '0')} on ${now.day}/${now.month}/${now.year}";
-      final message = "You have been granted access to $userName's Cryptaf vault. Please visit cryptaf-36296.web.app to request access using your verified email.";
-
-      await http.post(
-        Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
-          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
-          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
-          'template_params': {
-            'email': nomineeEmail,
-            'time': timeStr,
-            'message': message,
-            'passcode': message,
-          },
-        }),
-      ).timeout(const Duration(seconds: 15));
-    } catch (e) {
-      debugPrint('Failed to send email to nominee: $e');
-    }
   }
 
   @override
@@ -105,7 +46,8 @@ class EmergencyScreenState extends State<EmergencyScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Emergency Access', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Emergency Access',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -120,118 +62,245 @@ class EmergencyScreenState extends State<EmergencyScreen> {
 
           bool isEnabled = false;
           String status = 'disabled';
-          DateTime? activationDate;
-          DateTime? lastActiveDate;
-
+          DateTime? deadline;
           int durationHours = 168;
+
           if (snapshot.hasData && snapshot.data!.exists) {
             var data = snapshot.data!.data() as Map<String, dynamic>?;
             if (data != null) {
               isEnabled = data['emergencyEnabled'] ?? false;
               status = data['emergencyStatus'] ?? 'disabled';
-              Timestamp? ts = data['activationTimestamp'];
+              Timestamp? deadlineTs = data['emergencyDeadline'];
+              deadline = deadlineTs?.toDate();
+
               durationHours = data['emergencyDurationHours'] ?? 168;
               if (durationHours < 24) {
                 durationHours = 24;
               }
               _durationHours = durationHours;
-
-              if (isEnabled && status != 'expired') {
-                activationDate = ts?.toDate();
-                Timestamp? lastActiveTs = data['lastActiveTime'];
-                lastActiveDate = lastActiveTs?.toDate() ?? activationDate ?? DateTime.now();
-              }
             }
           }
-          
-          bool isExpired = status == 'expired';
+
+          bool isExpired = false;
+          if (isEnabled && deadline != null) {
+            isExpired = DateTime.now().isAfter(deadline);
+          } else if (isEnabled && status == 'expired') {
+            // Fallback for informational status
+            isExpired = true;
+          }
 
           return AnimatedBackground(
             child: SingleChildScrollView(
               controller: _scrollController,
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Info Box
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.redAccent.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.shield_outlined, color: Colors.redAccent, size: 32),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            'The Dead Man\'s Switch is a fail-safe. If you don\'t check in for $_durationHours hours, your vault will be automatically shared with your nominees.',
-                            style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+                  // Info Box — conditional on toggle state
+                  if (isEnabled)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: Colors.redAccent.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.shield_outlined,
+                              color: Colors.redAccent, size: 32),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              'The Dead Man\'s Switch is active. If you don\'t check in for $_durationHours hours, your vault will be automatically shared with your nominees.',
+                              style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                  height: 1.4),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.03),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.08)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.shield_outlined,
+                              color: Colors.white38, size: 32),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              'Dead Man\'s Switch is currently disabled. Enable it below to activate the inactivity timer and protect your vault.',
+                              style: TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 14,
+                                  height: 1.4),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
                   const SizedBox(height: 36),
 
                   // Toggle Switch
                   GlassContainer(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     child: SwitchListTile(
                       activeColor: const Color(0xFFC9A84C),
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Dead Man\'s Switch', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      subtitle: const Text('Enable inactivity timer', style: TextStyle(color: Colors.white54)),
+                      title: const Text('Dead Man\'s Switch',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                      subtitle: const Text('Enable inactivity timer',
+                          style: TextStyle(color: Colors.white54)),
                       value: isEnabled,
-                      onChanged: (bool value) {
-                        _firestore.updateEmergencySettings(value);
-                      },
+                      onChanged: _isToggling
+                          ? null
+                          : (bool value) async {
+                              final messenger = ScaffoldMessenger.of(context);
+                              setState(() {
+                                _isToggling = true;
+                              });
+                              try {
+                                await _firestore.updateEmergencySettings(value);
+                              } catch (e) {
+                                if (mounted) {
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'Failed to update Dead Man\'s Switch: $e'),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _isToggling = false;
+                                  });
+                                }
+                              }
+                            },
+                      secondary: _isToggling
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFFC9A84C),
+                              ),
+                            )
+                          : null,
                     ),
                   ),
 
                   if (isEnabled) ...[
                     const SizedBox(height: 16),
                     GlassContainer(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Inactivity Timeout', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              Text('Inactivity Timeout',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
                               SizedBox(height: 4),
-                              Text('Timer duration before release', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                              Text('Timer duration before release',
+                                  style: TextStyle(
+                                      color: Colors.white54, fontSize: 12)),
                             ],
                           ),
-                          DropdownButton<String>(
-                            value: _durationHours == 24 ? '24 Hours' : _durationHours == 48 ? '48 Hours' : _durationHours == 72 ? '72 Hours' : _durationHours == 720 ? '30 Days' : '7 Days',
-                            dropdownColor: const Color(0xFF0A0A0A),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                            underline: const SizedBox(),
-                            icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFC9A84C)),
-                            items: ['24 Hours', '48 Hours', '72 Hours', '7 Days', '30 Days']
-                              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                              .toList(),
-                            onChanged: (val) async {
-                              int newHours = 168;
-                              if (val == '24 Hours') newHours = 24;
-                              if (val == '48 Hours') newHours = 48;
-                              if (val == '72 Hours') newHours = 72;
-                              if (val == '30 Days') newHours = 720;
-                              
-                              setState(() {
-                                _durationHours = newHours;
-                              });
-                              
-                              await FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).set({
-                                'emergencyDurationHours': newHours,
-                              }, SetOptions(merge: true));
-                            },
+                          Row(
+                            children: [
+                              if (_isUpdatingDuration)
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 12.0),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Color(0xFFC9A84C)),
+                                  ),
+                                ),
+                              DropdownButton<String>(
+                                value: _durationHours == 24
+                                    ? '24 Hours'
+                                    : _durationHours == 48
+                                        ? '48 Hours'
+                                        : _durationHours == 72
+                                            ? '72 Hours'
+                                            : _durationHours == 720
+                                                ? '30 Days'
+                                                : '7 Days',
+                                dropdownColor: const Color(0xFF0A0A0A),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                                underline: const SizedBox(),
+                                icon: const Icon(Icons.arrow_drop_down,
+                                    color: Color(0xFFC9A84C)),
+                                items: [
+                                  '24 Hours',
+                                  '48 Hours',
+                                  '72 Hours',
+                                  '7 Days',
+                                  '30 Days'
+                                ]
+                                    .map((e) => DropdownMenuItem(
+                                        value: e, child: Text(e)))
+                                    .toList(),
+                                onChanged: _isUpdatingDuration
+                                    ? null
+                                    : (val) async {
+                                        int newHours = 168;
+                                        if (val == '24 Hours') newHours = 24;
+                                        if (val == '48 Hours') newHours = 48;
+                                        if (val == '72 Hours') newHours = 72;
+                                        if (val == '30 Days') newHours = 720;
+
+                                        setState(() {
+                                          _isUpdatingDuration = true;
+                                          _durationHours = newHours;
+                                        });
+
+                                        try {
+                                          await _firestore
+                                              .setEmergencyDuration(newHours);
+                                        } catch (e) {
+                                          debugPrint(
+                                              'Error updating duration: \$e');
+                                        } finally {
+                                          if (mounted) {
+                                            setState(() {
+                                              _isUpdatingDuration = false;
+                                            });
+                                          }
+                                        }
+                                      },
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -242,102 +311,57 @@ class EmergencyScreenState extends State<EmergencyScreen> {
 
                   // Timer Display
                   if (isEnabled) ...[
-                    if (lastActiveDate != null)
+                    if (deadline != null)
                       CountdownDisplay(
-                        lastActiveDate: lastActiveDate,
-                        durationHours: _durationHours,
+                        deadline: deadline,
                         initialIsExpired: isExpired,
-                        onExpired: () async {
-                          await _firestore.markEmergencyExpired();
-                          await _notifyNomineesOfEmergency();
-                        },
+                        onExpired:
+                            () {}, // Client only updates UI, doesn't authorize expiry
                       )
                     else if (isExpired)
-                      // Fallback if expired but no lastActiveDate
                       CountdownDisplay(
-                        lastActiveDate: DateTime.now(),
-                        durationHours: 0,
+                        deadline: DateTime.now(),
                         initialIsExpired: true,
                         onExpired: () {},
-                      ),
+                      )
+                    else
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.0),
+                        child: Text(
+                          'Arming timer securely...',
+                          style: TextStyle(
+                              color: Colors.white54,
+                              fontStyle: FontStyle.italic),
+                        ),
+                      )
                   ],
-
-                  const SizedBox(height: 32),
-
-                  // Nominee Access Request Section (Always clearly accessible below Dead Man's Switch)
-                  GlassContainer(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.people_outline, color: Color(0xFFC9A84C), size: 22),
-                            SizedBox(width: 10),
-                            Text(
-                              'Nominee Access Portal',
-                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Designated nominees can request vault verification code or claim emergency access below.',
-                          style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
-                        ),
-                        const SizedBox(height: 20),
-                        TextField(
-                          controller: _emailController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: 'Nominee Email Address',
-                            hintStyle: const TextStyle(color: Colors.white38),
-                            prefixIcon: const Icon(Icons.email_outlined, color: Colors.white54),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.05),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        GradientButton(
-                          text: 'Send Verification Code',
-                          isLoading: _isSendingOtp,
-                          onPressed: () async {
-                            if (_emailController.text.isEmpty) return;
-                            setState(() => _isSendingOtp = true);
-                            await _firestore.sendNomineeOTP(_emailController.text);
-                            if (!mounted) return;
-                            NotificationService().sendNotification(
-                              title: 'Nominee Access Request',
-                              body: 'A nominee is attempting to access your vault.',
-                              // ignore: use_build_context_synchronously
-                              context: context,
-                            );
-                            setState(() => _isSendingOtp = false);
-                            if (mounted) {
-                              Navigator.push(
-                                // ignore: use_build_context_synchronously
-                                context,
-                                MaterialPageRoute(builder: (context) => OtpScreen(email: _emailController.text)),
-                              );
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
 
                   // Detailed Steps
                   if (isEnabled && !isExpired) ...[
-                    const Text('Security Protocol', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text('Security Protocol',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 20),
-                    _buildStep(Icons.check_circle_outline, 'Step 1: System monitors for login activity', true),
-                    _buildStep(Icons.check_circle_outline, 'Step 2: $_durationHours-hour countdown starts after last login', true),
-                    _buildStep(Icons.radio_button_unchecked, 'Step 3: Transfer keys to nominees on expiry', false),
+                    _buildStep(
+                        Icons.check_circle_outline,
+                        'Step 1: Cryptaf monitors verified owner activity',
+                        true),
+                    _buildStep(
+                        Icons.check_circle_outline,
+                        'Step 2: The configured inactivity countdown begins after the latest activity',
+                        true),
+                    _buildStep(
+                        Icons.radio_button_unchecked,
+                        'Step 3: Eligible inherited files become accessible after the deadline',
+                        false),
                     const SizedBox(height: 40),
-                    const Text('Emergency QR Card', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text('Emergency QR Card',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
                     const Text(
                       'Print this card and give it to your trusted nominees or keep it in a safe place. It contains the portal link for them to request access.',
@@ -362,7 +386,8 @@ class EmergencyScreenState extends State<EmergencyScreen> {
     final user = FirebaseAuth.instance.currentUser;
     final userName = user?.displayName ?? user?.email ?? 'Vault Owner';
     final String uid = user?.uid ?? '';
-    final String portalUrl = 'https://cryptaf-36296.web.app/nominee-access?vaultOwner=$uid';
+    final String portalUrl =
+        'https://cryptaf-36296.web.app/nominee-access?vaultOwner=$uid';
 
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async {
@@ -377,17 +402,23 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                   padding: const pw.EdgeInsets.all(40),
                   decoration: pw.BoxDecoration(
                     border: pw.Border.all(color: PdfColors.black, width: 2),
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(20)),
+                    borderRadius:
+                        const pw.BorderRadius.all(pw.Radius.circular(20)),
                   ),
                   child: pw.Column(
                     mainAxisSize: pw.MainAxisSize.min,
                     crossAxisAlignment: pw.CrossAxisAlignment.center,
                     children: [
-                      pw.Text('Cryptaf Emergency Access Card', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                      pw.Text('Cryptaf Emergency Access Card',
+                          style: pw.TextStyle(
+                              fontSize: 24, fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(height: 20),
-                      pw.Text('Vault Owner: $userName', style: const pw.TextStyle(fontSize: 18)),
+                      pw.Text('Vault Owner: $userName',
+                          style: const pw.TextStyle(fontSize: 18)),
                       pw.SizedBox(height: 30),
-                      pw.Text('Scan the QR Code below to request emergency access:', style: const pw.TextStyle(fontSize: 14)),
+                      pw.Text(
+                          'Scan the QR Code below to request emergency access:',
+                          style: const pw.TextStyle(fontSize: 14)),
                       pw.SizedBox(height: 20),
                       pw.BarcodeWidget(
                         barcode: pw.Barcode.qrCode(),
@@ -396,12 +427,19 @@ class EmergencyScreenState extends State<EmergencyScreen> {
                         height: 200,
                       ),
                       pw.SizedBox(height: 20),
-                      pw.Text('Or visit: $portalUrl', style: const pw.TextStyle(fontSize: 14)),
+                      pw.Text('Or visit: $portalUrl',
+                          style: const pw.TextStyle(fontSize: 14)),
                       pw.SizedBox(height: 30),
-                      pw.Text('Instructions:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-                      pw.Text('1. Go to the URL or scan the QR code.', style: const pw.TextStyle(fontSize: 12)),
-                      pw.Text('2. Enter your verified email to request access.', style: const pw.TextStyle(fontSize: 12)),
-                      pw.Text('3. Access will be granted after the Dead Man\'s Switch timer expires.', style: const pw.TextStyle(fontSize: 12)),
+                      pw.Text('Instructions:',
+                          style: pw.TextStyle(
+                              fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                      pw.Text('1. Go to the URL or scan the QR code.',
+                          style: const pw.TextStyle(fontSize: 12)),
+                      pw.Text('2. Enter your verified email to request access.',
+                          style: const pw.TextStyle(fontSize: 12)),
+                      pw.Text(
+                          '3. Access will be granted after the Dead Man\'s Switch timer expires.',
+                          style: const pw.TextStyle(fontSize: 12)),
                     ],
                   ),
                 ),
@@ -419,9 +457,13 @@ class EmergencyScreenState extends State<EmergencyScreen> {
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
         children: [
-          Icon(icon, color: isDone ? const Color(0xFFC9A84C) : Colors.white24, size: 20),
+          Icon(icon,
+              color: isDone ? const Color(0xFFC9A84C) : Colors.white24,
+              size: 20),
           const SizedBox(width: 16),
-          Text(text, style: TextStyle(color: isDone ? Colors.white : Colors.white38, fontSize: 14)),
+          Text(text,
+              style: TextStyle(
+                  color: isDone ? Colors.white : Colors.white38, fontSize: 14)),
         ],
       ),
     );
@@ -429,15 +471,13 @@ class EmergencyScreenState extends State<EmergencyScreen> {
 }
 
 class CountdownDisplay extends StatefulWidget {
-  final DateTime lastActiveDate;
-  final int durationHours;
+  final DateTime deadline;
   final bool initialIsExpired;
   final VoidCallback onExpired;
 
   const CountdownDisplay({
     super.key,
-    required this.lastActiveDate,
-    required this.durationHours,
+    required this.deadline,
     required this.initialIsExpired,
     required this.onExpired,
   });
@@ -450,7 +490,6 @@ class _CountdownDisplayState extends State<CountdownDisplay> {
   Timer? _timer;
   Duration _remainingTime = Duration.zero;
   bool _isExpired = false;
-  bool _hasSent24hWarning = false;
 
   @override
   void initState() {
@@ -464,10 +503,8 @@ class _CountdownDisplayState extends State<CountdownDisplay> {
   @override
   void didUpdateWidget(CountdownDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.lastActiveDate != widget.lastActiveDate || 
-        oldWidget.durationHours != widget.durationHours ||
+    if (oldWidget.deadline != widget.deadline ||
         oldWidget.initialIsExpired != widget.initialIsExpired) {
-      
       _isExpired = widget.initialIsExpired;
       if (!_isExpired) {
         if (_timer == null || !_timer!.isActive) {
@@ -503,14 +540,10 @@ class _CountdownDisplayState extends State<CountdownDisplay> {
   void _calculateRemainingTime() {
     if (_isExpired) return;
 
-    final expiryDate = widget.lastActiveDate.add(Duration(hours: widget.durationHours));
+    final expiryDate = widget.deadline;
     final now = DateTime.now();
-    
-    if (now.difference(widget.lastActiveDate).inSeconds < 5) {
-      _remainingTime = Duration(hours: widget.durationHours);
-    } else {
-      _remainingTime = expiryDate.difference(now);
-    }
+
+    _remainingTime = expiryDate.difference(now);
 
     if (_remainingTime.isNegative) {
       _remainingTime = Duration.zero;
@@ -518,15 +551,6 @@ class _CountdownDisplayState extends State<CountdownDisplay> {
         _isExpired = true;
         _timer?.cancel();
         widget.onExpired();
-      }
-    } else if (_remainingTime.inHours < 24 && _remainingTime.inHours > 0) {
-      if (!_hasSent24hWarning) {
-        _hasSent24hWarning = true;
-        NotificationService().sendNotification(
-          title: 'Dead Man\'s Switch Warning',
-          body: '⚠️ Your vault will transfer in less than 24 hours! Open Cryptaf to reset.',
-          context: context,
-        );
       }
     }
   }
@@ -548,7 +572,11 @@ class _CountdownDisplayState extends State<CountdownDisplay> {
         children: [
           Text(
             _isExpired ? 'PROTOCOL EXPIRED' : 'TIME UNTIL ACCESS TRANSFER',
-            style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 2),
+            style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2),
           ),
           const SizedBox(height: 20),
           GlassContainer(
@@ -576,21 +604,60 @@ class _CountdownDisplayState extends State<CountdownDisplay> {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.emergency_share, color: Colors.redAccent, size: 20),
+                  Icon(Icons.emergency_share,
+                      color: Colors.redAccent, size: 20),
                   SizedBox(width: 10),
                   Text(
                     'Access Transfer Initiated',
-                    style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.redAccent, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 32),
+          ] else if (_remainingTime.inHours < 24 &&
+              _remainingTime.inSeconds > 0) ...[
+            const SizedBox(height: 24),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 750),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.warning_amber_rounded,
+                        color: Colors.amber, size: 22),
+                    SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        'Your vault is scheduled to transfer in less than 24 hours.',
+                        style: TextStyle(
+                            color: Colors.amber, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
           ] else ...[
             const SizedBox(height: 24),
             const Text(
               'Logging in resets this timer automatically.',
-              style: TextStyle(color: Colors.white38, fontSize: 13, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic),
             ),
+            const SizedBox(height: 32),
           ],
         ],
       ),
