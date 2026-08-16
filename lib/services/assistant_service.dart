@@ -52,7 +52,8 @@ class AssistantService {
       'legacy',
       'trusted contact',
       'inherit',
-      'give access'
+      'give access to vault',
+      'grant access'
     ])) {
       return _get('nominee');
     } else if (_containsAny(query, [
@@ -76,9 +77,9 @@ class AssistantService {
     } else if (_containsAny(query, [
       'emergency',
       'timer',
-      '72',
-      'hour',
-      'access',
+      '72 hour',
+      '72-hour',
+      'emergency access',
       'fail-safe',
       'failsafe',
       'locked out',
@@ -92,13 +93,23 @@ class AssistantService {
       'pdf',
       'image',
       'add file',
-      'save',
+      'save file',
+      'save document',
       'document',
       'scan'
     ])) {
       return _get('upload');
-    } else if (_containsAny(query,
-        ['vault', 'my data', 'what is', 'how to use', 'organize', 'folder'])) {
+    } else if (_containsAny(query, [
+      'vault',
+      'my data',
+      'what is cryptaf',
+      'what is the vault',
+      'what is a vault',
+      'how to use cryptaf',
+      'how to use the vault',
+      'organize',
+      'folder'
+    ])) {
       return _get('vault');
     } else if (_containsAny(query, [
       '2fa',
@@ -108,7 +119,8 @@ class AssistantService {
       'mfa',
       'authenticator',
       'pin',
-      'lock',
+      'app lock',
+      'vault lock',
       'password',
       'forgot password',
       'reset',
