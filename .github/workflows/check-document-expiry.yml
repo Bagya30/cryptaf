@@ -1,0 +1,33 @@
+name: Check Document Expiry
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run once a day at midnight UTC
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  check-expiry:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        npm install firebase-admin@11.11.1
+        npm install node-fetch@2
+
+    - name: Run Document Expiry Check
+      env:
+        FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        EMAILJS_SERVICE_ID_CRYPTAF: ${{ secrets.EMAILJS_SERVICE_ID_CRYPTAF }}
+        EMAILJS_TEMPLATE_ID_DOCUMENT_EXPIRY: ${{ secrets.EMAILJS_TEMPLATE_ID_DOCUMENT_EXPIRY }}
+        EMAILJS_USER_ID_DOCUMENT_EXPIRY: ${{ secrets.EMAILJS_USER_ID_DOCUMENT_EXPIRY }}
+        EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
+      run: node scripts/check-document-expiry.js
