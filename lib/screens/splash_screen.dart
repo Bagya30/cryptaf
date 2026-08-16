@@ -24,6 +24,8 @@ class _SplashScreenState extends State<SplashScreen> {
     // 5 second fallback timeout
     Timer(const Duration(seconds: 5), () async {
       if (mounted && !_navigated) {
+        if (!ModalRoute.of(context)!.isCurrent)
+          return; // Prevent redirect if deep link is active
         _navigated = true;
         try {
           final prefs = await SharedPreferences.getInstance();
@@ -34,13 +36,15 @@ class _SplashScreenState extends State<SplashScreen> {
             );
           } else if (mounted) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
+              MaterialPageRoute(
+                  builder: (context) => const AuthenticationWrapper()),
             );
           }
         } catch (e) {
           if (mounted) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
+              MaterialPageRoute(
+                  builder: (context) => const AuthenticationWrapper()),
             );
           }
         }
@@ -53,6 +57,9 @@ class _SplashScreenState extends State<SplashScreen> {
       try {
         final prefs = await SharedPreferences.getInstance();
         if (!mounted || _navigated) return;
+        if (!ModalRoute.of(context)!.isCurrent)
+          return; // Prevent redirect if deep link is active
+
         final onboardingDone = prefs.getBool('onboarding_done') ?? false;
 
         if (mounted && !_navigated) {
@@ -63,16 +70,20 @@ class _SplashScreenState extends State<SplashScreen> {
             );
           } else {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
+              MaterialPageRoute(
+                  builder: (context) => const AuthenticationWrapper()),
             );
           }
         }
       } catch (e) {
         if (mounted && !_navigated) {
           _navigated = true;
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const AuthenticationWrapper()),
-          );
+          if (ModalRoute.of(context)?.isCurrent == true) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                  builder: (context) => const AuthenticationWrapper()),
+            );
+          }
         }
       }
     });
@@ -86,20 +97,25 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Animated Logo
-            Image.asset(
-              'assets/images/logo.png',
-              width: 150,
-              height: 150,
-            )
-                .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                .shimmer(duration: 1500.ms, color: const Color(0xFFC9A84C).withOpacity(0.5))
-                .scale(
-                  begin: const Offset(1.0, 1.0),
-                  end: const Offset(1.05, 1.05),
-                  duration: 1500.ms,
-                  curve: Curves.easeInOut,
-                ),
+            // Logo: RepaintBoundary isolates the repeating animation to its own
+            // compositing layer. filterQuality.medium reduces decode cost on HTML renderer.
+            RepaintBoundary(
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 150,
+                height: 150,
+                filterQuality: FilterQuality.medium,
+              )
+                  .animate(
+                      onPlay: (controller) => controller.repeat(reverse: true))
+                  .fadeIn(duration: 800.ms)
+                  .scale(
+                    begin: const Offset(0.95, 0.95),
+                    end: const Offset(1.05, 1.05),
+                    duration: 1500.ms,
+                    curve: Curves.easeInOut,
+                  ),
+            ),
             const SizedBox(height: 30),
             // App Name
             TweenAnimationBuilder<int>(
