@@ -24,7 +24,7 @@ jobs:
           
       - name: Install Dependencies
         run: |
-          npm install firebase-admin
+          npm install firebase-admin@11.11.1
           
       - name: Run Emergency Status Check
         env:
