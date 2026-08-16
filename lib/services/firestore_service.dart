@@ -382,8 +382,6 @@ class FirestoreService {
         .collection('users')
         .doc(uid)
         .collection('nominees')
-        // Exclude any legacy records that pre-date the deletion fix
-        .where('migratedToCanonical', isNull: true)
         .orderBy('addedAt', descending: true)
         .snapshots();
   }
