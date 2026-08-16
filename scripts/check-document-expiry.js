@@ -88,9 +88,17 @@ async function checkDocumentExpiry(dbMock = null, fetchMock = null) {
         const diffTime = expDate.getTime() - today.getTime();
         const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
+        console.log(`User ${doc.id} - Document "${data.title}" (${data.type}) | daysRemaining: ${daysRemaining} | alertSent: ${alertSent}`);
+
         // Condition: <= 30 days, > 0 days, not yet sent
-        if (daysRemaining <= 30 && daysRemaining > 0 && !alertSent) {
-          console.log(`User ${doc.id} - Document "${data.title}" (${data.type}) expires in ${daysRemaining} days. Sending alert...`);
+        if (daysRemaining <= 0) {
+          console.log(`  -> Skip: already expired`);
+        } else if (daysRemaining > 30) {
+          console.log(`  -> Skip: not within 30-day window yet`);
+        } else if (alertSent) {
+          console.log(`  -> Skip: already alerted`);
+        } else {
+          console.log(`  -> Action: Sending alert...`);
           
           if (EMAILJS_SERVICE_ID) {
             const formattedDate = expDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
