@@ -9,8 +9,40 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EncryptionResult {
   final Uint8List encryptedBytes;
-  final String iv; // base64 encoded IV
+  final String iv;
   EncryptionResult(this.encryptedBytes, this.iv);
+}
+
+class GCMEnvelope {
+  final Uint8List ciphertext;
+  final String ivBase64;
+  final String? saltBase64;
+  final int cryptoVersion;
+
+  GCMEnvelope({
+    required this.ciphertext,
+    required this.ivBase64,
+    this.saltBase64,
+    this.cryptoVersion = 1,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'ciphertext': base64.encode(ciphertext),
+      'iv': ivBase64,
+      if (saltBase64 != null) 'salt': saltBase64,
+      'v': cryptoVersion,
+    };
+  }
+
+  factory GCMEnvelope.fromMap(Map<String, dynamic> map) {
+    return GCMEnvelope(
+      ciphertext: base64.decode(map['ciphertext'] as String),
+      ivBase64: map['iv'] as String,
+      saltBase64: map['salt'] as String?,
+      cryptoVersion: map['v'] as int? ?? 1,
+    );
+  }
 }
 
 class CryptoService {
@@ -19,44 +51,130 @@ class CryptoService {
     final passBytes = utf8.encode(password);
     final saltBytes = utf8.encode(salt);
     final hmac = Hmac(sha256, passBytes);
-    
+
     final block1 = Uint8List(saltBytes.length + 4);
     block1.setAll(0, saltBytes);
     block1[saltBytes.length + 3] = 1;
-    
+
     var u = hmac.convert(block1).bytes;
     final result = Uint8List.fromList(u);
-    
+
     for (int i = 1; i < 10000; i++) {
       u = hmac.convert(u).bytes;
       for (int j = 0; j < result.length; j++) {
         result[j] ^= u[j];
       }
     }
-    
+
+    final keyBytes = Uint8List.sublistView(result, 0, 32);
+    return base64.encode(keyBytes);
+  }
+
+  // deriveKeyV2(String password, String salt, {int iterations = 100000}) - uses PBKDF2 to derive AES-256 key from user password
+  Future<String> deriveKeyV2(String password, String salt, {int iterations = 100000}) async {
+    final passBytes = utf8.encode(password);
+    final saltBytes = utf8.encode(salt);
+    final hmac = Hmac(sha256, passBytes);
+
+    final block1 = Uint8List(saltBytes.length + 4);
+    block1.setAll(0, saltBytes);
+    block1[saltBytes.length + 3] = 1;
+
+    var u = hmac.convert(block1).bytes;
+    final result = Uint8List.fromList(u);
+
+    for (int i = 1; i < iterations; i++) {
+      u = hmac.convert(u).bytes;
+      for (int j = 0; j < result.length; j++) {
+        result[j] ^= u[j];
+      }
+      
+      // Yield to the event loop every 5000 iterations to prevent UI freezing on Web
+      if (i % 5000 == 0) {
+        await Future.delayed(Duration.zero);
+      }
+    }
+
     final keyBytes = Uint8List.sublistView(result, 0, 32);
     return base64.encode(keyBytes);
   }
 
   // encryptFile(Uint8List fileBytes, String key) - AES-256-CBC encryption
-  EncryptionResult encryptFile(Uint8List fileBytes, String key, {String? ivBase64}) {
+  EncryptionResult encryptFile(Uint8List fileBytes, String key,
+      {String? ivBase64}) {
     final keyObj = enc.Key.fromBase64(key);
-    final ivObj = ivBase64 != null ? enc.IV.fromBase64(ivBase64) : enc.IV.fromSecureRandom(16);
-    
+    final ivObj = ivBase64 != null
+        ? enc.IV.fromBase64(ivBase64)
+        : enc.IV.fromSecureRandom(16);
+
     final encrypter = enc.Encrypter(enc.AES(keyObj, mode: enc.AESMode.cbc));
     final encrypted = encrypter.encryptBytes(fileBytes, iv: ivObj);
-    
+
     return EncryptionResult(encrypted.bytes, ivObj.base64);
   }
 
   // decryptFile(Uint8List encryptedBytes, String key) - AES-256-CBC decryption
-  Uint8List decryptFile(Uint8List encryptedBytes, String key, {String? ivBase64}) {
+  Uint8List decryptFile(Uint8List encryptedBytes, String key,
+      {String? ivBase64}) {
     final keyObj = enc.Key.fromBase64(key);
-    final ivObj = ivBase64 != null ? enc.IV.fromBase64(ivBase64) : enc.IV(Uint8List(16));
-    
+    final ivObj =
+        ivBase64 != null ? enc.IV.fromBase64(ivBase64) : enc.IV(Uint8List(16));
+
     final encrypter = enc.Encrypter(enc.AES(keyObj, mode: enc.AESMode.cbc));
-    final decrypted = encrypter.decryptBytes(enc.Encrypted(encryptedBytes), iv: ivObj);
-    
+    final decrypted =
+        encrypter.decryptBytes(enc.Encrypted(encryptedBytes), iv: ivObj);
+
+    return Uint8List.fromList(decrypted);
+  }
+
+  // generateDEK() - Generates a 256-bit (32 byte) random DEK
+  String generateDEK() {
+    return enc.Key.fromSecureRandom(32).base64;
+  }
+
+  // generateOfflineNomineeKey() - Generates a 12-character secure string
+  String generateOfflineNomineeKey() {
+    const chars =
+        'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#%^&*';
+    final rnd = Random.secure();
+    return String.fromCharCodes(Iterable.generate(
+        12, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+  }
+
+  // generateEnrollmentCode() - Generates 16 bytes of randomness and encodes it in base64url without padding
+  String generateEnrollmentCode() {
+    final randomBytes = enc.IV.fromSecureRandom(16).bytes;
+    return base64Url.encode(randomBytes).replaceAll('=', '');
+  }
+
+  // encryptFileGCM(Uint8List fileBytes, String key) - AES-256-GCM encryption
+  GCMEnvelope encryptFileGCM(Uint8List fileBytes, String key,
+      {String? ivBase64, String? saltBase64}) {
+    final keyObj = enc.Key.fromBase64(key);
+    final ivObj = ivBase64 != null
+        ? enc.IV.fromBase64(ivBase64)
+        : enc.IV.fromSecureRandom(12); // GCM standard IV size is 12 bytes
+
+    final encrypter = enc.Encrypter(enc.AES(keyObj, mode: enc.AESMode.gcm));
+    final encrypted = encrypter.encryptBytes(fileBytes, iv: ivObj);
+
+    return GCMEnvelope(
+        ciphertext: encrypted.bytes,
+        ivBase64: ivObj.base64,
+        saltBase64: saltBase64);
+  }
+
+  // decryptFileGCM(Uint8List encryptedBytes, String key) - AES-256-GCM decryption
+  Uint8List decryptFileGCM(Uint8List encryptedBytes, String key,
+      {String? ivBase64}) {
+    final keyObj = enc.Key.fromBase64(key);
+    final ivObj =
+        ivBase64 != null ? enc.IV.fromBase64(ivBase64) : enc.IV(Uint8List(12));
+
+    final encrypter = enc.Encrypter(enc.AES(keyObj, mode: enc.AESMode.gcm));
+    final decrypted =
+        encrypter.decryptBytes(enc.Encrypted(encryptedBytes), iv: ivObj);
+
     return Uint8List.fromList(decrypted);
   }
 
@@ -76,7 +194,8 @@ class CryptoService {
   String get masterAppKey {
     final key = dotenv.env['MASTER_APP_KEY'] ?? '';
     if (key.isEmpty) {
-      throw Exception('MASTER_APP_KEY environment variable is missing or empty.');
+      throw Exception(
+          'MASTER_APP_KEY environment variable is missing or empty.');
     }
     return enc.Key.fromUtf8(key).base64;
   }
@@ -102,22 +221,166 @@ class CryptoService {
   // generate24WordRecoveryKey() - generates a 24-word recovery key
   String generate24WordRecoveryKey() {
     const List<String> wordlist = [
-      'abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse',
-      'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act',
-      'action', 'actor', 'actress', 'actual', 'adapt', 'add', 'addict', 'address', 'adjust', 'admit',
-      'adult', 'advance', 'advice', 'aerobic', 'affair', 'afford', 'afraid', 'again', 'age', 'agent',
-      'agree', 'ahead', 'aim', 'air', 'airport', 'aisle', 'alarm', 'album', 'alcohol', 'alert',
-      'alien', 'all', 'alley', 'allow', 'almost', 'alone', 'alpha', 'already', 'also', 'alter',
-      'always', 'amateur', 'amazing', 'among', 'amount', 'amused', 'analyst', 'anchor', 'ancient', 'anger',
-      'angle', 'angry', 'animal', 'ankle', 'announce', 'annual', 'another', 'answer', 'antenna', 'antique',
-      'anxiety', 'any', 'apart', 'apology', 'appear', 'apple', 'approve', 'april', 'arch', 'arctic',
-      'area', 'arena', 'argue', 'arm', 'armed', 'armor', 'army', 'around', 'arrange', 'arrest',
-      'arrive', 'arrow', 'art', 'artefact', 'artist', 'artwork', 'ask', 'aspect', 'assault', 'asset',
-      'assist', 'assume', 'asthma', 'athlete', 'atom', 'attack', 'attend', 'attitude', 'attract', 'auction',
-      'audit', 'august', 'aunt', 'author', 'auto', 'autumn', 'average', 'avocado', 'avoid', 'awake',
-      'aware', 'away', 'awesome', 'awful', 'awkward', 'axis', 'baby', 'bachelor', 'bacon', 'badge',
-      'bag', 'balance', 'balcony', 'ball', 'bamboo', 'banana', 'banner', 'bar', 'barely', 'bargain',
-      'barrel', 'base', 'basic', 'basket', 'battle', 'beach', 'bean', 'beauty', 'because', 'become'
+      'abandon',
+      'ability',
+      'able',
+      'about',
+      'above',
+      'absent',
+      'absorb',
+      'abstract',
+      'absurd',
+      'abuse',
+      'access',
+      'accident',
+      'account',
+      'accuse',
+      'achieve',
+      'acid',
+      'acoustic',
+      'acquire',
+      'across',
+      'act',
+      'action',
+      'actor',
+      'actress',
+      'actual',
+      'adapt',
+      'add',
+      'addict',
+      'address',
+      'adjust',
+      'admit',
+      'adult',
+      'advance',
+      'advice',
+      'aerobic',
+      'affair',
+      'afford',
+      'afraid',
+      'again',
+      'age',
+      'agent',
+      'agree',
+      'ahead',
+      'aim',
+      'air',
+      'airport',
+      'aisle',
+      'alarm',
+      'album',
+      'alcohol',
+      'alert',
+      'alien',
+      'all',
+      'alley',
+      'allow',
+      'almost',
+      'alone',
+      'alpha',
+      'already',
+      'also',
+      'alter',
+      'always',
+      'amateur',
+      'amazing',
+      'among',
+      'amount',
+      'amused',
+      'analyst',
+      'anchor',
+      'ancient',
+      'anger',
+      'angle',
+      'angry',
+      'animal',
+      'ankle',
+      'announce',
+      'annual',
+      'another',
+      'answer',
+      'antenna',
+      'antique',
+      'anxiety',
+      'any',
+      'apart',
+      'apology',
+      'appear',
+      'apple',
+      'approve',
+      'april',
+      'arch',
+      'arctic',
+      'area',
+      'arena',
+      'argue',
+      'arm',
+      'armed',
+      'armor',
+      'army',
+      'around',
+      'arrange',
+      'arrest',
+      'arrive',
+      'arrow',
+      'art',
+      'artefact',
+      'artist',
+      'artwork',
+      'ask',
+      'aspect',
+      'assault',
+      'asset',
+      'assist',
+      'assume',
+      'asthma',
+      'athlete',
+      'atom',
+      'attack',
+      'attend',
+      'attitude',
+      'attract',
+      'auction',
+      'audit',
+      'august',
+      'aunt',
+      'author',
+      'auto',
+      'autumn',
+      'average',
+      'avocado',
+      'avoid',
+      'awake',
+      'aware',
+      'away',
+      'awesome',
+      'awful',
+      'awkward',
+      'axis',
+      'baby',
+      'bachelor',
+      'bacon',
+      'badge',
+      'bag',
+      'balance',
+      'balcony',
+      'ball',
+      'bamboo',
+      'banana',
+      'banner',
+      'bar',
+      'barely',
+      'bargain',
+      'barrel',
+      'base',
+      'basic',
+      'basket',
+      'battle',
+      'beach',
+      'bean',
+      'beauty',
+      'because',
+      'become'
     ];
     final random = enc.IV.fromSecureRandom(24);
     List<String> words = [];
@@ -132,7 +395,10 @@ class CryptoService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       final recKeyEnc = doc.data()?['recoveryKey'] as String?;
       final vaultPassEnc = doc.data()?['vaultPasswordEncrypted'] as String?;
       if (recKeyEnc != null && vaultPassEnc != null) {
@@ -141,7 +407,8 @@ class CryptoService {
         if (inputPassword == actual) return true;
       }
       // fallback
-      final cred = EmailAuthProvider.credential(email: user.email!, password: inputPassword);
+      final cred = EmailAuthProvider.credential(
+          email: user.email!, password: inputPassword);
       await user.reauthenticateWithCredential(cred);
       return true;
     } catch (_) {
@@ -149,4 +416,3 @@ class CryptoService {
     }
   }
 }
-
