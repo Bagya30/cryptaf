@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cryptaf/services/inactivity_timer_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -9,7 +10,7 @@ import 'package:cryptaf/services/firestore_service.dart';
 import 'package:cryptaf/screens/signup_screen.dart';
 import 'package:cryptaf/screens/dashboard_screen.dart';
 import 'package:cryptaf/screens/setup_wizard_screen.dart';
-import 'package:cryptaf/screens/share_screen.dart';
+
 import 'package:cryptaf/screens/two_factor_verification_screen.dart';
 import 'package:cryptaf/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,7 +24,8 @@ import 'package:cryptaf/services/crypto_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? message;
+  const LoginScreen({super.key, this.message});
 
   @override
   LoginScreenState createState() => LoginScreenState();
@@ -39,27 +41,60 @@ class LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  @override
+  void initState() {
+    super.initState();
+    InactivityTimerService().stop();
+    if (widget.message != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(widget.message!),
+            backgroundColor: const Color(0xFFC9A84C),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      });
+    }
+  }
+
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
+    User? user;
     try {
-      final user = await _auth.signInWithGoogle();
-      if (user == null) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            error = 'Google Sign-In canceled or failed.';
-          });
-        }
-        return;
+      user = await _auth.signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          error = 'Google Sign-In error: $e';
+        });
       }
+      return;
+    }
 
+    if (user == null) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          error = 'Google Sign-In canceled or failed.';
+        });
+      }
+      return;
+    }
+
+    try {
       // Check if user document already exists in Firestore
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (!doc.exists) {
         // First time Google Signup: generate recovery key
         final crypto = CryptoService();
         final recoveryKey = crypto.generate24WordRecoveryKey();
-        final encryptedRecoveryKey = crypto.encryptString(recoveryKey, crypto.masterAppKey);
+        final encryptedRecoveryKey =
+            crypto.encryptString(recoveryKey, crypto.masterAppKey);
 
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'email': user.email,
@@ -77,12 +112,19 @@ class LoginScreenState extends State<LoginScreen> {
             barrierDismissible: false,
             builder: (context) => AlertDialog(
               backgroundColor: const Color(0xFF0A0A0A),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(color: Colors.white12)),
               title: const Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 28),
+                  Icon(Icons.warning_amber_rounded,
+                      color: Colors.orangeAccent, size: 28),
                   SizedBox(width: 10),
-                  Text('Save Recovery Key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text('Save Vault Password Reset Phrase',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18)),
                 ],
               ),
               content: Column(
@@ -90,8 +132,9 @@ class LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'IMPORTANT: Write down these 24 words and store them in a secure offline location. This is your ONLY way to recover your account if you lose your master password.',
-                    style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+                    'Store these words securely. Use them within the app to reset your vault password if you forget it while still logged in. This does NOT work if you are logged out or locked out of your account.',
+                    style: TextStyle(
+                        color: Colors.white70, fontSize: 14, height: 1.4),
                   ),
                   const SizedBox(height: 20),
                   Container(
@@ -99,11 +142,17 @@ class LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFC9A84C).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFC9A84C).withOpacity(0.3)),
+                      border: Border.all(
+                          color: const Color(0xFFC9A84C).withOpacity(0.3)),
                     ),
                     child: SelectableText(
                       recoveryKey,
-                      style: const TextStyle(color: Color(0xFFC9A84C), fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 0.5, height: 1.5),
+                      style: const TextStyle(
+                          color: Color(0xFFC9A84C),
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                          height: 1.5),
                     ),
                   ),
                 ],
@@ -112,9 +161,12 @@ class LoginScreenState extends State<LoginScreen> {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context); // close dialog
-                    _navigateAfterGoogleSignIn(user);
+                    _navigateAfterGoogleSignIn(user!);
                   },
-                  child: const Text('I Have Saved It Securely', style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.bold)),
+                  child: const Text('I Have Saved It Securely',
+                      style: TextStyle(
+                          color: Color(0xFFC9A84C),
+                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -123,14 +175,14 @@ class LoginScreenState extends State<LoginScreen> {
       } else {
         if (mounted) {
           setState(() => _isLoading = false);
-          _navigateAfterGoogleSignIn(user);
+          _navigateAfterGoogleSignIn(user!);
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          error = 'Google Sign-In error: $e';
+          error = 'Firestore Init error: $e';
         });
       }
     }
@@ -144,7 +196,8 @@ class LoginScreenState extends State<LoginScreen> {
       );
     } else {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => EmailVerificationScreen(email: user.email ?? '')),
+        MaterialPageRoute(
+            builder: (_) => EmailVerificationScreen(email: user.email ?? '')),
         (route) => false,
       );
     }
@@ -175,105 +228,95 @@ class LoginScreenState extends State<LoginScreen> {
 
   Future<void> _sendLockoutEmail(String userEmail) async {
     try {
-      await http.post(
-        Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
-          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_DEFAULT'] ?? '',
-          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
-          'template_params': {
-            'email': userEmail,
-            'passcode': 'BRUTE FORCE LOCKOUT ALERT: 5 failed login attempts detected. Your account has been temporarily locked for 30 minutes for security.',
-            'time': '30 minutes',
-          },
-        }),
-      ).timeout(const Duration(seconds: 15));
+      await http
+          .post(
+            Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+              'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_DEFAULT'] ?? '',
+              'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
+              'template_params': {
+                'email': userEmail,
+                'passcode':
+                    'BRUTE FORCE LOCKOUT ALERT: 5 failed login attempts detected. Your account has been temporarily locked for 30 minutes for security.',
+                'time': '30 minutes',
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
     } catch (e) {
       debugPrint('Failed to send lockout email: $e');
     }
   }
 
-  Future<void> _sendDuressAlertEmail(String userEmail) async {
-    try {
-      final now = DateTime.now();
-      final timeStr = '${now.hour}:${now.minute.toString().padLeft(2, '0')} on ${now.day}/${now.month}/${now.year}';
-      final message = "âš ï¸ DURESS WARNING: A duress login was initiated on your Cryptaf account. The app has displayed a fake empty vault to protect your data. Time: $timeStr.";
 
-      await http.post(
-        Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
-          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
-          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
-          'template_params': {
-            'email': userEmail,
-            'time': timeStr,
-            'message': message,
-            'passcode': message,
-          },
-        }),
-      ).timeout(const Duration(seconds: 15));
-    } catch (e) {
-      debugPrint('Failed to send duress alert email: $e');
-    }
-  }
 
   Future<void> _sendLoginAlertEmail(String userEmail) async {
     try {
       final now = DateTime.now();
-      final timeStr = '${now.hour}:${now.minute.toString().padLeft(2, '0')} on ${now.day}/${now.month}/${now.year}';
-      final message = "New login detected on your Cryptaf account. Time: $timeStr. If this wasn't you, change your password immediately.";
+      final timeStr =
+          '${now.hour}:${now.minute.toString().padLeft(2, '0')} on ${now.day}/${now.month}/${now.year}';
+      final message =
+          "New login detected on your Cryptaf account. Time: $timeStr. If this wasn't you, change your password immediately.";
 
-      await http.post(
-        Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
-          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
-          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
-          'template_params': {
-            'email': userEmail,
-            'time': timeStr,
-            'message': message,
-            'passcode': message,
-          },
-        }),
-      ).timeout(const Duration(seconds: 15));
+      await http
+          .post(
+            Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+              'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
+              'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
+              'template_params': {
+                'email': userEmail,
+                'time': timeStr,
+                'message': message,
+                'passcode': message,
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
     } catch (e) {
       debugPrint('Failed to send login alert email: $e');
     }
   }
 
-  Future<void> _sendSuspiciousLoginEmail(String userEmail, String ip, String timeStr) async {
+  Future<void> _sendSuspiciousLoginEmail(
+      String userEmail, String ip, String timeStr) async {
     try {
-      final message = "New device or location detected on your Cryptaf account. IP: $ip. Time: $timeStr. If this wasn't you, secure your account immediately.";
+      final message =
+          "New device or location detected on your Cryptaf account. IP: $ip. Time: $timeStr. If this wasn't you, secure your account immediately.";
 
-      await http.post(
-        Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
-          'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
-          'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
-          'template_params': {
-            'email': userEmail,
-            'time': timeStr,
-            'message': message,
-            'passcode': message,
-          },
-        }),
-      ).timeout(const Duration(seconds: 15));
+      await http
+          .post(
+            Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'service_id': dotenv.env['EMAILJS_SERVICE_ID'] ?? '',
+              'template_id': dotenv.env['EMAILJS_TEMPLATE_ID_ALERT'] ?? '',
+              'user_id': dotenv.env['EMAILJS_USER_ID'] ?? '',
+              'template_params': {
+                'email': userEmail,
+                'time': timeStr,
+                'message': message,
+                'passcode': message,
+              },
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
     } catch (e) {
       debugPrint('Failed to send suspicious login email: $e');
     }
   }
 
-  Future<void> _handlePostLogin(String uid, String userEmail, bool twoFactorEnabled, String? encryptedSecret) async {
+  Future<void> _handlePostLogin(String uid, String userEmail,
+      bool twoFactorEnabled, String? encryptedSecret) async {
     String ipAddress = 'Unknown IP';
     try {
-      final res = await http.get(Uri.parse('https://api.ipify.org?format=json')).timeout(const Duration(seconds: 5));
+      final res = await http
+          .get(Uri.parse('https://api.ipify.org?format=json'))
+          .timeout(const Duration(seconds: 5));
       if (res.statusCode == 200) {
         ipAddress = jsonDecode(res.body)['ip'] ?? 'Unknown IP';
       }
@@ -281,16 +324,21 @@ class LoginScreenState extends State<LoginScreen> {
       debugPrint('Failed to fetch IP: $e');
     }
 
-    const String deviceInfo = kIsWeb ? 'Web Browser (Flutter Web)' : 'Mobile Client';
+    const String deviceInfo =
+        kIsWeb ? 'Web Browser (Flutter Web)' : 'Mobile Client';
 
     final userDocRef = FirebaseFirestore.instance.collection('users').doc(uid);
     final userDoc = await userDocRef.get();
     final data = userDoc.data() ?? {};
     final String? lastIp = data['lastIp'] as String?;
 
-    if (lastIp != null && lastIp != ipAddress && lastIp != 'Unknown IP' && ipAddress != 'Unknown IP') {
+    if (lastIp != null &&
+        lastIp != ipAddress &&
+        lastIp != 'Unknown IP' &&
+        ipAddress != 'Unknown IP') {
       final now = DateTime.now();
-      final timeStr = '${now.hour}:${now.minute.toString().padLeft(2, '0')} on ${now.day}/${now.month}/${now.year}';
+      final timeStr =
+          '${now.hour}:${now.minute.toString().padLeft(2, '0')} on ${now.day}/${now.month}/${now.year}';
       _sendSuspiciousLoginEmail(userEmail, ipAddress, timeStr);
     }
 
@@ -309,14 +357,19 @@ class LoginScreenState extends State<LoginScreen> {
     }, SetOptions(merge: true));
 
     final FirestoreService firestore = FirestoreService();
-    await firestore.logActivity(type: 'login', details: 'User logged in', ipAddress: ipAddress, deviceInfo: deviceInfo);
+    await firestore.logActivity(
+        type: 'login',
+        details: 'User logged in',
+        ipAddress: ipAddress,
+        deviceInfo: deviceInfo);
 
     if (twoFactorEnabled && encryptedSecret != null) {
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => TwoFactorVerificationScreen(encryptedSecret: encryptedSecret),
+            builder: (context) =>
+                TwoFactorVerificationScreen(encryptedSecret: encryptedSecret),
           ),
         );
       }
@@ -328,25 +381,14 @@ class LoginScreenState extends State<LoginScreen> {
         context: context,
       );
       final setupProgress = await firestore.getOrVerifySetupProgress();
-      final completed = setupProgress.values.where((v) => v).length == 5;
+      final completed = setupProgress.values.where((v) => v).length == 4;
       if (mounted) {
         if (completed) {
-          final prefs = await SharedPreferences.getInstance();
-          final pendingToken = prefs.getString('pending_share_token');
-          if (pendingToken != null && pendingToken.isNotEmpty) {
-            await prefs.remove('pending_share_token');
-            if (!mounted) return;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => ShareScreen(token: pendingToken)),
-            );
-          } else {
-            if (!mounted) return;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const DashboardScreen()),
-            );
-          }
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
         } else {
           Navigator.pushReplacement(
             context,
@@ -364,7 +406,8 @@ class LoginScreenState extends State<LoginScreen> {
       body: AnimatedBackground(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -389,13 +432,16 @@ class LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                    ).animate(onPlay: (controller) => controller.repeat())
-                     .rotate(duration: 4.seconds),
+                    )
+                        .animate(onPlay: (controller) => controller.repeat())
+                        .rotate(duration: 4.seconds),
                     const Icon(
                       Icons.lock_outline,
                       size: 48,
                       color: Color(0xFFC9A84C),
-                    ).animate().scale(duration: 800.ms, curve: Curves.elasticOut),
+                    )
+                        .animate()
+                        .scale(duration: 800.ms, curve: Curves.elasticOut),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -418,7 +464,9 @@ class LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(color: Colors.white54, fontSize: 16),
                     ),
                   ],
-                ).animate(delay: 200.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic),
+                )
+                    .animate(delay: 200.ms)
+                    .fadeIn(duration: 600.ms, curve: Curves.easeOutCubic),
                 const SizedBox(height: 40),
                 GlassContainer(
                   child: Form(
@@ -429,12 +477,16 @@ class LoginScreenState extends State<LoginScreen> {
                           label: 'Email Address',
                           child: TextFormField(
                             style: const TextStyle(color: Colors.white),
-                            decoration: _inputDecoration('Email Address', Icons.email_outlined),
+                            decoration: _inputDecoration(
+                                'Email Address', Icons.email_outlined),
                             keyboardType: TextInputType.emailAddress,
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Enter an email';
-                              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                              if (!emailRegex.hasMatch(val)) return 'Enter a valid email';
+                              if (val == null || val.isEmpty)
+                                return 'Enter an email';
+                              final emailRegex =
+                                  RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                              if (!emailRegex.hasMatch(val))
+                                return 'Enter a valid email';
                               return null;
                             },
                             onChanged: (val) => setState(() => email = val),
@@ -445,18 +497,25 @@ class LoginScreenState extends State<LoginScreen> {
                           label: 'Password',
                           child: TextFormField(
                             style: const TextStyle(color: Colors.white),
-                            decoration: _inputDecoration('Password', Icons.lock_outline).copyWith(
+                            decoration:
+                                _inputDecoration('Password', Icons.lock_outline)
+                                    .copyWith(
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
                                   color: const Color(0xFFC9A84C),
                                   size: 20,
                                 ),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword),
                               ),
                             ),
                             obscureText: _obscurePassword,
-                            validator: (val) => val!.length < 6 ? 'Password must be 6+ characters' : null,
+                            validator: (val) => val!.length < 6
+                                ? 'Password must be 6+ characters'
+                                : null,
                             onChanged: (val) => setState(() => password = val),
                           ),
                         ),
@@ -467,7 +526,8 @@ class LoginScreenState extends State<LoginScreen> {
                             onPressed: () => _showForgotPasswordDialog(context),
                             child: const Text(
                               'Forgot Password?',
-                              style: TextStyle(color: Color(0xFFC9A84C), fontSize: 13),
+                              style: TextStyle(
+                                  color: Color(0xFFC9A84C), fontSize: 13),
                             ),
                           ),
                         ),
@@ -477,151 +537,166 @@ class LoginScreenState extends State<LoginScreen> {
                           button: true,
                           child: GradientButton(
                             text: 'Log In',
-                          isLoading: _isLoading,
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              setState(() => _isLoading = true);
-                              setState(() => error = ''); // Clear previous errors
+                            isLoading: _isLoading,
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate()) {
+                                setState(() => _isLoading = true);
+                                setState(
+                                    () => error = ''); // Clear previous errors
 
-                              try {
-                                final sanitizedEmail = email.toLowerCase().trim();
-                                DocumentSnapshot<Map<String, dynamic>>? attemptDoc;
                                 try {
-                                  attemptDoc = await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).get();
+                                  final sanitizedEmail =
+                                      email.toLowerCase().trim();
+                                  DocumentSnapshot<Map<String, dynamic>>?
+                                      attemptDoc;
+                                  try {
+                                    attemptDoc = await FirebaseFirestore
+                                        .instance
+                                        .collection('login_attempts')
+                                        .doc(sanitizedEmail)
+                                        .get();
 
-                                  if (attemptDoc.exists) {
-                                    final data = attemptDoc.data()!;
-                                    final int lockedUntil = data['lockedUntil'] ?? 0;
-                                    final now = DateTime.now().millisecondsSinceEpoch;
-                                    if (now < lockedUntil) {
-                                      final int remainingMinutes = ((lockedUntil - now) / 60000).ceil();
-                                      if (mounted) {
-                                        setState(() {
-                                          error = 'Account locked due to too many failed attempts. Try again in $remainingMinutes minutes.';
-                                          _isLoading = false;
-                                        });
-                                      }
-                                      return;
-                                    }
-                                  }
-                                } catch (e) {
-                                  debugPrint('Brute force check error: $e');
-                                }
-
-                                bool isDuressLogin = false;
-                                try {
-                                  final usersSnap = await FirebaseFirestore.instance
-                                      .collection('users')
-                                      .where('email', isEqualTo: sanitizedEmail)
-                                      .limit(1)
-                                      .get();
-
-                                  if (usersSnap.docs.isNotEmpty) {
-                                    final userData = usersSnap.docs.first.data();
-                                    final String? encryptedDuressPassword = userData['duressPassword'] as String?;
-                                    if (encryptedDuressPassword != null && encryptedDuressPassword.isNotEmpty) {
-                                      final crypto = CryptoService();
-                                      try {
-                                        final String decryptedDuress = crypto.decryptString(encryptedDuressPassword, crypto.masterAppKey);
-                                        if (decryptedDuress == password) {
-                                          isDuressLogin = true;
+                                    if (attemptDoc.exists) {
+                                      final data = attemptDoc.data()!;
+                                      final int lockedUntil =
+                                          data['lockedUntil'] ?? 0;
+                                      final now =
+                                          DateTime.now().millisecondsSinceEpoch;
+                                      if (now < lockedUntil) {
+                                        final int remainingMinutes =
+                                            ((lockedUntil - now) / 60000)
+                                                .ceil();
+                                        if (mounted) {
+                                          setState(() {
+                                            error =
+                                                'Account locked due to too many failed attempts. Try again in $remainingMinutes minutes.';
+                                            _isLoading = false;
+                                          });
                                         }
-                                      } catch (e) {
-                                        debugPrint('Duress decrypt failed: $e');
+                                        return;
                                       }
+                                    }
+                                  } catch (e) {
+                                    debugPrint('Brute force check error: $e');
+                                  }
+
+                                  // Duress password pre-auth check removed - conflicts with Firestore's all-or-nothing document read rules under our auth-required security model. Requires a separate Firebase Auth decoy identity design to implement safely. See 2026-08-21 investigation.
+
+                                  dynamic result;
+                                  try {
+                                    result =
+                                        await _auth.signInWithEmailAndPassword(
+                                            email, password);
+                                  } catch (e) {
+                                    if (mounted) {
+                                      setState(() {
+                                        error = 'Authentication failed: $e';
+                                        _isLoading = false;
+                                      });
+                                    }
+                                    return;
+                                  }
+
+                                  if (mounted) {
+                                    if (result == null) {
+                                      int attempts = 1;
+                                      if (attemptDoc != null &&
+                                          attemptDoc.exists) {
+                                        attempts = (attemptDoc.data()?[
+                                                    'failedAttempts'] ??
+                                                0) +
+                                            1;
+                                      }
+                                      int lockedUntil = 0;
+                                      String errMsg =
+                                          'Invalid email or password.';
+
+                                      if (attempts >= 5) {
+                                        lockedUntil = DateTime.now()
+                                                .millisecondsSinceEpoch +
+                                            (30 * 60 * 1000);
+                                        errMsg =
+                                            'Account locked for 30 minutes due to 5 failed login attempts.';
+                                        _sendLockoutEmail(email);
+                                      } else if (attempts >= 3) {
+                                        errMsg =
+                                            'Warning: $attempts failed login attempts. Account will lock after 5 fails.';
+                                      }
+
+                                      try {
+                                        await FirebaseFirestore.instance
+                                            .collection('login_attempts')
+                                            .doc(sanitizedEmail)
+                                            .set({
+                                          'failedAttempts': attempts,
+                                          'lockedUntil': lockedUntil,
+                                        }, SetOptions(merge: true));
+                                      } catch (e) {
+                                        debugPrint(
+                                            'Error updating login attempts: $e');
+                                      }
+
+                                      setState(() {
+                                        error = errMsg;
+                                        _isLoading = false;
+                                      });
+                                    } else {
+                                      try {
+                                        await FirebaseFirestore.instance
+                                            .collection('login_attempts')
+                                            .doc(sanitizedEmail)
+                                            .set({
+                                          'failedAttempts': 0,
+                                          'lockedUntil': 0,
+                                        }, SetOptions(merge: true));
+                                      } catch (e) {
+                                        debugPrint(
+                                            'Error clearing login attempts: $e');
+                                      }
+
+                                      setState(() => _isLoading = false);
+                                      _sendLoginAlertEmail(email);
+
+                                      final doc = await FirebaseFirestore
+                                          .instance
+                                          .collection('users')
+                                          .doc(result.uid)
+                                          .get();
+                                      final data = doc.data();
+                                      final bool twoFactorEnabled =
+                                          data?['twoFactorEnabled'] ?? false;
+                                      final String? encryptedSecret =
+                                          data?['totpSecret'] as String?;
+
+                                      await _handlePostLogin(result.uid, email,
+                                          twoFactorEnabled, encryptedSecret);
                                     }
                                   }
                                 } catch (e) {
-                                  debugPrint('User query error (likely permission denied for unauth): $e');
-                                }
-
-                                if (isDuressLogin) {
-                                  await FirebaseAuth.instance.signInAnonymously();
+                                  debugPrint('Login process error: $e');
                                   if (mounted) {
-                                    setState(() => _isLoading = false);
-                                    _sendDuressAlertEmail(email);
-                                    Navigator.pushReplacement(
-                                      // ignore: use_build_context_synchronously
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                                    );
-                                  }
-                                  return;
-                                }
-
-                                dynamic result = await _auth.signInWithEmailAndPassword(email, password);
-
-                                if (mounted) {
-                                  if (result == null) {
-                                    int attempts = 1;
-                                    if (attemptDoc != null && attemptDoc.exists) {
-                                      attempts = (attemptDoc.data()?['failedAttempts'] ?? 0) + 1;
-                                    }
-                                    int lockedUntil = 0;
-                                    String errMsg = 'Invalid email or password.';
-
-                                    if (attempts >= 5) {
-                                      lockedUntil = DateTime.now().millisecondsSinceEpoch + (30 * 60 * 1000);
-                                      errMsg = 'Account locked for 30 minutes due to 5 failed login attempts.';
-                                      _sendLockoutEmail(email);
-                                    } else if (attempts >= 3) {
-                                      errMsg = 'Warning: $attempts failed login attempts. Account will lock after 5 fails.';
-                                    }
-
-                                    try {
-                                      await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).set({
-                                        'failedAttempts': attempts,
-                                        'lockedUntil': lockedUntil,
-                                      }, SetOptions(merge: true));
-                                    } catch (e) {
-                                      debugPrint('Error updating login attempts: $e');
-                                    }
-
                                     setState(() {
-                                      error = errMsg;
+                                      error =
+                                          'An unexpected error occurred during login. ($e)';
                                       _isLoading = false;
                                     });
-                                  } else {
-                                    try {
-                                      await FirebaseFirestore.instance.collection('login_attempts').doc(sanitizedEmail).set({
-                                        'failedAttempts': 0,
-                                        'lockedUntil': 0,
-                                      }, SetOptions(merge: true));
-                                    } catch (e) {
-                                      debugPrint('Error clearing login attempts: $e');
-                                    }
-
-                                    setState(() => _isLoading = false);
-                                    _sendLoginAlertEmail(email);
-
-                                    final doc = await FirebaseFirestore.instance.collection('users').doc(result.uid).get();
-                                    final data = doc.data();
-                                    final bool twoFactorEnabled = data?['twoFactorEnabled'] ?? false;
-                                    final String? encryptedSecret = data?['totpSecret'] as String?;
-
-                                    await _handlePostLogin(result.uid, email, twoFactorEnabled, encryptedSecret);
                                   }
                                 }
-                              } catch (e) {
-                                debugPrint('Login process error: $e');
-                                if (mounted) {
-                                  setState(() {
-                                    error = 'An unexpected error occurred during login. ($e)';
-                                    _isLoading = false;
-                                  });
-                                }
                               }
-                            }
-                          },
+                            },
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         const Row(
                           children: [
                             Expanded(child: Divider(color: Colors.white12)),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('OR', style: TextStyle(color: Colors.white38, fontSize: 13, fontWeight: FontWeight.bold)),
+                              child: Text('OR',
+                                  style: TextStyle(
+                                      color: Colors.white38,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold)),
                             ),
                             Expanded(child: Divider(color: Colors.white12)),
                           ],
@@ -633,26 +708,39 @@ class LoginScreenState extends State<LoginScreen> {
                             side: const BorderSide(color: Colors.white24),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                           icon: Image.network(
                             'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/24px-Google_%22G%22_logo.svg.png',
                             height: 20,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, color: Colors.white),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.g_mobiledata,
+                                    color: Colors.white),
                           ),
-                          label: Text('Continue with Google', style: GoogleFonts.oxanium(fontWeight: FontWeight.bold)),
+                          label: Text('Continue with Google',
+                              style: GoogleFonts.oxanium(
+                                  fontWeight: FontWeight.bold)),
                           onPressed: _isLoading ? null : _handleGoogleSignIn,
                         ),
                       ],
                     ),
                   ),
-                ).animate(delay: 400.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic).slideY(begin: 0.2, end: 0, duration: 600.ms, curve: Curves.easeOutCubic),
+                )
+                    .animate(delay: 400.ms)
+                    .fadeIn(duration: 600.ms, curve: Curves.easeOutCubic)
+                    .slideY(
+                        begin: 0.2,
+                        end: 0,
+                        duration: 600.ms,
+                        curve: Curves.easeOutCubic),
                 if (error.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Text(
                     error,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 14.0),
+                    style: const TextStyle(
+                        color: Colors.redAccent, fontSize: 14.0),
                   ),
                 ],
                 const SizedBox(height: 24),
@@ -666,14 +754,21 @@ class LoginScreenState extends State<LoginScreen> {
                     TextButton(
                       child: const Text(
                         "Sign Up",
-                        style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            color: Color(0xFFC9A84C),
+                            fontWeight: FontWeight.w600),
                       ),
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const SignupScreen()));
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SignupScreen()));
                       },
                     ),
                   ],
-                ).animate(delay: 600.ms).fadeIn(duration: 600.ms, curve: Curves.easeOutCubic),
+                )
+                    .animate(delay: 600.ms)
+                    .fadeIn(duration: 600.ms, curve: Curves.easeOutCubic),
               ],
             ),
           ),
@@ -688,25 +783,31 @@ class LoginScreenState extends State<LoginScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0A0A0A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Colors.white12)),
-        title: const Text('Reset Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Colors.white12)),
+        title: const Text('Reset Password',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Enter your email to receive a password reset link.', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            const Text('Enter your email to receive a password reset link.',
+                style: TextStyle(color: Colors.white70, fontSize: 14)),
             const SizedBox(height: 20),
             TextField(
-               controller: resetEmailController,
+              controller: resetEmailController,
               style: const TextStyle(color: Colors.white),
-              decoration: _inputDecoration('Email Address', Icons.email_outlined),
+              decoration:
+                  _inputDecoration('Email Address', Icons.email_outlined),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),
           TextButton(
             onPressed: () async {
@@ -720,7 +821,8 @@ class LoginScreenState extends State<LoginScreen> {
                   // ignore: use_build_context_synchronously
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Password reset email sent to ${resetEmailController.text}'),
+                      content: Text(
+                          'Password reset email sent to ${resetEmailController.text}'),
                       backgroundColor: const Color(0xFFC9A84C),
                     ),
                   );
@@ -728,12 +830,16 @@ class LoginScreenState extends State<LoginScreen> {
                   if (!mounted) return;
                   // ignore: use_build_context_synchronously
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.redAccent),
+                    SnackBar(
+                        content: Text('Error: ${e.toString()}'),
+                        backgroundColor: Colors.redAccent),
                   );
                 }
               }
             },
-            child: const Text('Send Link', style: TextStyle(color: Color(0xFFC9A84C), fontWeight: FontWeight.bold)),
+            child: const Text('Send Link',
+                style: TextStyle(
+                    color: Color(0xFFC9A84C), fontWeight: FontWeight.bold)),
           ),
         ],
       ),

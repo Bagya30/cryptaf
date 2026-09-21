@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cryptaf/utils/web_helper.dart';
 import 'package:cryptaf/web_url_stub.dart' if (dart.library.html) 'dart:html'
     as html;
 
@@ -385,8 +386,10 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
     final name = data['name'] ?? 'file';
     final downloadUrl = data['downloadUrl'] as String?;
     final encrypted = data['encrypted'] ?? true;
-    final salt = data['salt'] as String?;
+    final saltRaw = data['salt'] as String?;
     final iv = data['iv'] as String?;
+    final isInheritable = data['isInheritable'] ?? false;
+    final nomineeWrappedDEK = data['nomineeWrappedDEK'] as Map<String, dynamic>?;
 
     if (downloadUrl == null) return;
 
@@ -417,7 +420,7 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Enter the vault decryption password provided by the owner.',
+                    'Enter the 12-character Offline Access Key provided by the vault owner when this file was shared.',
                     style: TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   const SizedBox(height: 16),
@@ -427,7 +430,7 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
                     obscureText: obscureDecryptPass,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Decryption Password',
+                      hintText: 'Offline Access Key (12 characters)',
                       hintStyle: const TextStyle(color: Colors.white24),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.05),
@@ -476,21 +479,40 @@ class _NomineePortalScreenState extends State<NomineePortalScreen> {
                       throw Exception('Download failed');
                     }
 
-                    final key = _crypto.deriveKey(password, salt!);
-                    final decBytes =
-                        _crypto.decryptFile(res.bodyBytes, key, ivBase64: iv);
+                    final salt = (saltRaw != null && saltRaw.isNotEmpty)
+                        ? saltRaw
+                        : 'DefaultCryptafSalt123!@#';
+
+                    // Nominee decryption: use the Offline Access Key with nomineeWrappedDEK.
+                    // deriveKey() uses 10,000 PBKDF2-HMAC-SHA256 iterations — matching
+                    // exactly how nomineeWrappedDEK was created in vault_upload_service.dart.
+                    if (!isInheritable || nomineeWrappedDEK == null) {
+                      throw Exception('This file does not have nominee access configured.');
+                    }
+
+                    final nomineeKey = _crypto.deriveKey(password, salt);
+                    final env = GCMEnvelope.fromMap(nomineeWrappedDEK);
+                    final rawDEKBytes = _crypto.decryptFileGCM(
+                        env.ciphertext, nomineeKey, ivBase64: env.ivBase64);
+                    final rawDEK = utf8.decode(rawDEKBytes);
+                    final List<int> decBytes =
+                        _crypto.decryptFileGCM(res.bodyBytes, rawDEK, ivBase64: iv);
 
                     // Save or open decrypted bytes
-                    final dataUri =
-                        'data:application/octet-stream;base64,${base64.encode(decBytes)}';
-                    await launchUrl(Uri.parse(dataUri));
+                    if (kIsWeb) {
+                      downloadBlobWeb(decBytes, name);
+                    } else {
+                      final dataUri =
+                          'data:application/octet-stream;base64,${base64.encode(decBytes)}';
+                      await launchUrl(Uri.parse(dataUri));
+                    }
                   } catch (e) {
                     if (!mounted) return;
                     // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                           content:
-                              Text('Decryption failed. Incorrect password.'),
+                              Text('Decryption failed. Invalid Offline Access Key.'),
                           backgroundColor: Colors.redAccent),
                     );
                   } finally {

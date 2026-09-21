@@ -10,7 +10,7 @@ import 'package:cryptaf/screens/dashboard_screen.dart';
 import 'package:cryptaf/services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cryptaf/screens/splash_screen.dart';
-import 'package:cryptaf/screens/share_screen.dart';
+
 import 'package:cryptaf/screens/nominee_portal_screen.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
@@ -150,19 +150,7 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
         if (rawUid.isNotEmpty) {
           _initialRoute = '/emergency/$rawUid';
         }
-      } else if (currentUrl.contains('/share/')) {
-        final rawToken = currentUrl
-            .split('/share/')
-            .last
-            .split('?')
-            .first
-            .split('#')
-            .first
-            .split('/')
-            .first;
-        if (rawToken.isNotEmpty) {
-          _initialRoute = '/share/$rawToken';
-        }
+
       } else if (currentUrl.contains('/nominee-access')) {
         final uri = Uri.parse(currentUrl);
         final vaultOwner = uri.queryParameters['vaultOwner'];
@@ -247,12 +235,7 @@ class CryptafAppState extends State<CryptafApp> with WidgetsBindingObserver {
       },
       onGenerateRoute: (settings) {
         final path = settings.name;
-        if (path != null && path.startsWith('/share/')) {
-          final token = path.replaceFirst('/share/', '');
-          return MaterialPageRoute(
-            builder: (context) => ShareRouteWrapper(token: token),
-          );
-        }
+
         if (path != null && path.startsWith('/emergency/')) {
           final uid = path.replaceFirst('/emergency/', '');
           return MaterialPageRoute(
@@ -419,43 +402,7 @@ class GoldShimmerTextState extends State<GoldShimmerText>
   }
 }
 
-class ShareRouteWrapper extends StatelessWidget {
-  final String token;
-  const ShareRouteWrapper({super.key, required this.token});
 
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Color(0xFF0A0A0A),
-            body: Center(
-                child: CircularProgressIndicator(color: Color(0xFFC9A84C))),
-          );
-        }
-        if (snapshot.hasData && snapshot.data != null) {
-          return ShareScreen(token: token);
-        } else {
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('pending_share_token', token);
-            if (context.mounted) {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()));
-            }
-          });
-          return const Scaffold(
-            backgroundColor: Color(0xFF0A0A0A),
-            body: Center(
-                child: CircularProgressIndicator(color: Color(0xFFC9A84C))),
-          );
-        }
-      },
-    );
-  }
-}
 
 class ActivityObserver extends NavigatorObserver {
   @override
